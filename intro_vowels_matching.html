@@ -182,6 +182,58 @@
 </div>
 
 <script>
+// ---------- Sound: Korean pronunciation (TTS) + effect tones ----------
+let koVoice = null;
+function pickKoreanVoice() {
+  const voices = speechSynthesis.getVoices();
+  koVoice = voices.find(v => v.lang === 'ko-KR') || voices.find(v => v.lang && v.lang.startsWith('ko')) || null;
+}
+if ('speechSynthesis' in window) {
+  pickKoreanVoice();
+  speechSynthesis.onvoiceschanged = pickKoreanVoice;
+}
+
+function speakKorean(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel(); // stop any overlapping speech
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ko-KR';
+  if (koVoice) utter.voice = koVoice;
+  utter.rate = 0.85;
+  speechSynthesis.speak(utter);
+}
+
+// Lightweight WebAudio tones for correct/wrong feedback (no files needed)
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, duration, type = 'sine', delay = 0, vol = 0.2) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + delay);
+  osc.stop(ctx.currentTime + delay + duration);
+}
+function playCorrectSound() {
+  playTone(523.25, 0.12, 'sine', 0);
+  playTone(659.25, 0.12, 'sine', 0.1);
+  playTone(783.99, 0.18, 'sine', 0.2);
+}
+function playWrongSound() {
+  playTone(200, 0.25, 'sawtooth', 0, 0.12);
+}
+function playPerfectSound() {
+  [523.25, 587.33, 659.25, 783.99, 1046.5].forEach((f, i) => playTone(f, 0.15, 'sine', i * 0.1));
+}
+
 const pairs = [
   { symbol: 'ㅏ', sound: '아' },
   { symbol: 'ㅓ', sound: '어' },
@@ -226,6 +278,7 @@ function buildCards() {
     card.dataset.pos = pos;
     card.id = `sym-${pos}`;
     card.onclick = () => onSymbolClick(pos);
+    card.onmouseenter = () => speakKorean(pairs[pairIdx].sound);
     symCol.appendChild(card);
   });
 
@@ -237,6 +290,7 @@ function buildCards() {
     card.dataset.pos = pos;
     card.id = `snd-${pos}`;
     card.onclick = () => onSoundClick(pos);
+    card.onmouseenter = () => speakKorean(pairs[pairIdx].sound);
     sndCol.appendChild(card);
   });
 }
@@ -337,10 +391,13 @@ function checkAll() {
       sndEl.classList.add('matched');
       matched.add(`sym-${symPos}`);
       matched.add(`snd-${sndPos}`);
+      playCorrectSound();
+      speakKorean(pairs[pairIdxSym].sound);
     } else {
       wrong++;
       symEl.style.borderColor = '#e74c3c';
       sndEl.style.borderColor = '#e74c3c';
+      playWrongSound();
       setTimeout(() => {
         symEl.style.borderColor = '';
         sndEl.style.borderColor = '';
@@ -355,6 +412,7 @@ function checkAll() {
   if (correct === total) {
     resultEl.textContent = '🎉 Perfect! All correct!';
     resultEl.className = 'result success';
+    playPerfectSound();
   } else {
     resultEl.textContent = wrong > 0 ? `❌ ${wrong} wrong — try again!` : `Keep going! ${total - correct} left.`;
     resultEl.className = 'result error';
