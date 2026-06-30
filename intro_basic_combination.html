@@ -251,6 +251,53 @@
 <button class="btn-reset" onclick="resetSlots()">🔄 Reset</button>
 
 <script>
+// ---------- Sound: Korean pronunciation (TTS) + effect tones ----------
+let koVoice = null;
+function pickKoreanVoice() {
+  const voices = speechSynthesis.getVoices();
+  koVoice = voices.find(v => v.lang === 'ko-KR') || voices.find(v => v.lang && v.lang.startsWith('ko')) || null;
+}
+if ('speechSynthesis' in window) {
+  pickKoreanVoice();
+  speechSynthesis.onvoiceschanged = pickKoreanVoice;
+}
+function speakKorean(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ko-KR';
+  if (koVoice) utter.voice = koVoice;
+  utter.rate = 0.85;
+  speechSynthesis.speak(utter);
+}
+
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, duration, type = 'sine', delay = 0, vol = 0.2) {
+  const ctx = getAudioCtx();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, ctx.currentTime + delay);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(ctx.currentTime + delay);
+  osc.stop(ctx.currentTime + delay + duration);
+}
+function playPopSound() {
+  playTone(440, 0.08, 'square', 0, 0.08);
+}
+function playCompleteSound() {
+  playTone(523.25, 0.12, 'sine', 0);
+  playTone(659.25, 0.12, 'sine', 0.1);
+  playTone(783.99, 0.18, 'sine', 0.2);
+}
+
 const consonants = ['ㄱ','ㄴ','ㄷ','ㅁ','ㅂ','ㅅ'];
 const vowels     = ['ㅏ','ㅣ','ㅗ','ㅜ'];
 
@@ -281,6 +328,13 @@ function makeCard(char, type) {
   });
   div.addEventListener('dragend', () => {
     div.classList.remove('dragging');
+  });
+  div.addEventListener('mouseenter', () => {
+    if (type === 'vowel') {
+      speakKorean(char);
+    } else {
+      speakKorean(compose(char, 'ㅡ')); // representative sound, e.g. ㄱ -> 그
+    }
   });
   return div;
 }
@@ -319,6 +373,7 @@ function placeInSlot(char, type) {
     slotData.vowel = char;
     renderSlot('vowelSlot', char, 'vowel');
   }
+  playPopSound();
   updateResult();
 }
 
@@ -347,7 +402,10 @@ function clearSlot(type) {
 function updateResult() {
   const el = document.getElementById('resultChar');
   if (slotData.consonant && slotData.vowel) {
-    el.textContent = compose(slotData.consonant, slotData.vowel);
+    const result = compose(slotData.consonant, slotData.vowel);
+    el.textContent = result;
+    playCompleteSound();
+    setTimeout(() => speakKorean(result), 250);
   } else {
     el.textContent = '–';
   }
