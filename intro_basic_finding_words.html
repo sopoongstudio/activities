@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intro – Basic Finding Words</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  /* Word cards row */
+  .words-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 28px;
+  }
+
+  .word-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 14px 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 160px;
+    flex: 1;
+    max-width: 200px;
+  }
+
+  .word-emoji { font-size: 2rem; }
+
+  .word-korean {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .word-roman {
+    font-size: 0.8rem;
+    color: #888;
+    font-style: italic;
+  }
+
+  .word-english {
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-bottom: 4px;
+  }
+
+  .slots-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .slot-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .slot {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    border: 2px dashed #ccc;
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #333;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+
+  .slot.dragover {
+    border-color: #3498db;
+    background: #eaf4fd;
+  }
+
+  .slot.filled {
+    border-style: solid;
+    border-color: #81c784;
+    background: #f1f8f1;
+  }
+
+  .slot.correct {
+    border-color: #27ae60;
+    background: #d4edda;
+  }
+
+  .slot.wrong {
+    border-color: #e74c3c;
+    background: #fde8e8;
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+  }
+
+  .slot .remove-btn {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+  }
+
+  .slot-hint {
+    font-size: 0.65rem;
+    color: #bbb;
+  }
+
+  /* Vowel pool */
+  .pool-wrap {
+    width: 100%;
+    max-width: 700px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  }
+
+  .pool-label {
+    font-size: 0.78rem;
+    color: #999;
+    margin-bottom: 12px;
+  }
+
+  .pool-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .pool-card {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    background: #FFE066;
+    border: 2px solid #f0c800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  }
+
+  .pool-card:hover { transform: scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,0.13); }
+  .pool-card.dragging { opacity: 0.35; }
+  .pool-card.used { opacity: 0.25; pointer-events: none; }
+
+  /* Buttons */
+  .buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 22px;
+  }
+
+  button {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-check { background: #3498db; color: #fff; }
+  .btn-check:hover { background: #2980b9; }
+  .btn-reset { background: #e0e0e0; color: #333; }
+  .btn-reset:hover { background: #c8c8c8; }
+
+  .result {
+    margin-top: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    min-height: 24px;
+    text-align: center;
+  }
+  .result.success { color: #27ae60; }
+  .result.error   { color: #e74c3c; }
+</style>
+</head>
+<body>
+
+<h1>Intro: Find the Right Letters</h1>
+<p class="subtitle">Drag the correct vowels from below into each word's boxes 👇</p>
+
+<div class="words-row" id="wordsRow"></div>
+
+<div class="pool-wrap">
+  <div class="pool-label">Vowel pool — drag into the boxes above</div>
+  <div class="pool-cards" id="poolCards"></div>
+</div>
+
+<div class="result" id="result"></div>
+
+<div class="buttons">
+  <button class="btn-reset" onclick="resetGame()">🔄 Reset</button>
+  <button class="btn-check" onclick="checkAnswers()">✅ Check</button>
+</div>
+
+<script>
+// Words: { emoji, korean, roman, english, syllables: [{char, hint}] }
+const words = [
+  {
+    emoji: '🥒',
+    korean: '오이',
+    roman: 'o-i',
+    english: 'cucumber',
+    syllables: [
+      { char: '오', hint: 'ㅇ+ㅗ' },
+      { char: '이', hint: 'ㅇ+ㅣ' },
+    ]
+  },
+  {
+    emoji: '👦',
+    korean: '아이',
+    roman: 'a-i',
+    english: 'child',
+    syllables: [
+      { char: '아', hint: 'ㅇ+ㅏ' },
+      { char: '이', hint: 'ㅇ+ㅣ' },
+    ]
+  },
+  {
+    emoji: '🦷',
+    korean: '이',
+    roman: 'i',
+    english: 'tooth',
+    syllables: [
+      { char: '이', hint: 'ㅇ+ㅣ' },
+    ]
+  },
+  {
+    emoji: '5️⃣',
+    korean: '오',
+    roman: 'o',
+    english: 'five',
+    syllables: [
+      { char: '오', hint: 'ㅇ+ㅗ' },
+    ]
+  },
+];
+
+// Build pool: all syllable chars shuffled with some distractors
+const distractors = ['우', '아', '어'];
+let poolSource = [];
+
+function buildPoolSource() {
+  let all = [];
+  words.forEach(w => w.syllables.forEach(s => all.push(s.char)));
+  // add distractors
+  distractors.forEach(d => all.push(d));
+  // shuffle
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
+
+let dragData = null; // { char, poolIndex }
+let slotData = {}; // slotKey -> { char, poolIndex }
+
+function slotKey(wi, si) { return `${wi}-${si}`; }
+
+function buildWords() {
+  const row = document.getElementById('wordsRow');
+  row.innerHTML = '';
+
+  words.forEach((word, wi) => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.innerHTML = `
+      <div class="word-emoji">${word.emoji}</div>
+      <div class="word-korean">${word.korean}</div>
+      <div class="word-roman">${word.roman}</div>
+      <div class="word-english">${word.english}</div>
+      <div class="slots-row" id="slots-${wi}"></div>
+    `;
+    row.appendChild(card);
+
+    const slotsRow = card.querySelector(`#slots-${wi}`);
+    word.syllables.forEach((syl, si) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'slot-wrap';
+
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.id = `slot-${wi}-${si}`;
+      slot.dataset.wi = wi;
+      slot.dataset.si = si;
+      slot.dataset.answer = syl.char;
+
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('dragover'); });
+      slot.addEventListener('dragleave', () => slot.classList.remove('dragover'));
+      slot.addEventListener('drop', e => {
+        e.preventDefault();
+        slot.classList.remove('dragover');
+        if (!dragData) return;
+        placeInSlot(wi, si, dragData.char, dragData.poolIndex);
+        dragData = null;
+      });
+
+      const hint = document.createElement('div');
+      hint.className = 'slot-hint';
+      hint.textContent = syl.hint;
+
+      wrap.appendChild(slot);
+      wrap.appendChild(hint);
+      slotsRow.appendChild(wrap);
+    });
+  });
+}
+
+function buildPool() {
+  poolSource = buildPoolSource();
+  const pool = document.getElementById('poolCards');
+  pool.innerHTML = '';
+  poolSource.forEach((char, idx) => {
+    const card = document.createElement('div');
+    card.className = 'pool-card';
+    card.textContent = char;
+    card.id = `pool-${idx}`;
+    card.draggable = true;
+    card.dataset.char = char;
+    card.dataset.idx = idx;
+
+    card.addEventListener('dragstart', e => {
+      dragData = { char, poolIndex: idx };
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'copy';
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    pool.appendChild(card);
+  });
+}
+
+function placeInSlot(wi, si, char, poolIndex) {
+  const key = slotKey(wi, si);
+
+  // If slot already has something, return its pool card
+  if (slotData[key]) {
+    const oldPoolCard = document.getElementById(`pool-${slotData[key].poolIndex}`);
+    if (oldPoolCard) oldPoolCard.classList.remove('used');
+  }
+
+  slotData[key] = { char, poolIndex };
+
+  // Mark pool card as used
+  const poolCard = document.getElementById(`pool-${poolIndex}`);
+  if (poolCard) poolCard.classList.add('used');
+
+  // Render slot
+  const slot = document.getElementById(`slot-${wi}-${si}`);
+  slot.classList.remove('correct', 'wrong');
+  slot.classList.add('filled');
+  slot.innerHTML = char;
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '✕';
+  btn.onclick = () => removeFromSlot(wi, si);
+  slot.appendChild(btn);
+}
+
+function removeFromSlot(wi, si) {
+  const key = slotKey(wi, si);
+  if (!slotData[key]) return;
+
+  const poolCard = document.getElementById(`pool-${slotData[key].poolIndex}`);
+  if (poolCard) poolCard.classList.remove('used');
+
+  delete slotData[key];
+
+  const slot = document.getElementById(`slot-${wi}-${si}`);
+  slot.className = 'slot';
+  slot.innerHTML = '';
+}
+
+function checkAnswers() {
+  let correct = 0;
+  let total = 0;
+
+  words.forEach((word, wi) => {
+    word.syllables.forEach((syl, si) => {
+      total++;
+      const key = slotKey(wi, si);
+      const slot = document.getElementById(`slot-${wi}-${si}`);
+      if (!slotData[key]) return;
+      if (slotData[key].char === syl.char) {
+        correct++;
+        slot.classList.add('correct');
+        slot.classList.remove('wrong');
+      } else {
+        slot.classList.add('wrong');
+        slot.classList.remove('correct');
+      }
+    });
+  });
+
+  const resultEl = document.getElementById('result');
+  if (correct === total) {
+    resultEl.textContent = '🎉 Perfect! All correct!';
+    resultEl.className = 'result success';
+  } else {
+    resultEl.textContent = `✅ ${correct} / ${total} correct — keep trying!`;
+    resultEl.className = 'result error';
+  }
+}
+
+function resetGame() {
+  slotData = {};
+  dragData = null;
+  document.getElementById('result').textContent = '';
+  buildWords();
+  buildPool();
+}
+
+resetGame();
+</script>
+</body>
+</html>

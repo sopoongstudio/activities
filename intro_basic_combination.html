@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intro – Basic Combination</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .panel {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+  }
+
+  .panel-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 4px;
+  }
+
+  .panel-sub {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: -6px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    border: 3px solid transparent;
+  }
+
+  .card:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  .card.consonant {
+    background: #f08080;
+    color: #fff;
+    border-color: #e06060;
+  }
+
+  .card.vowel {
+    background: #7eb8e8;
+    color: #fff;
+    border-color: #5a9fd4;
+  }
+
+  .card.dragging {
+    opacity: 0.4;
+  }
+
+  /* Drop zone panel */
+  .drop-panel {
+    background: #e8f5e9;
+    border: 2px dashed #81c784;
+    border-radius: 16px;
+    padding: 20px 16px;
+    min-width: 160px;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .drop-panel.dragover {
+    background: #c8e6c9;
+    border-color: #388e3c;
+  }
+
+  .drop-slots {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .slot {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    border: 2px dashed #aaa;
+    background: #f9f9f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #333;
+    position: relative;
+    transition: border-color 0.2s, background 0.2s;
+  }
+
+  .slot.filled {
+    border-style: solid;
+    border-color: #555;
+    background: #fff;
+  }
+
+  .slot .remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #e74c3c;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    line-height: 1;
+  }
+
+  .slot.consonant-slot.filled { border-color: #e06060; }
+  .slot.vowel-slot.filled     { border-color: #5a9fd4; }
+
+  .result-char {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 2px;
+  }
+
+  .hint {
+    font-size: 0.75rem;
+    color: #888;
+    text-align: center;
+  }
+
+  .btn-reset {
+    margin-top: 20px;
+    padding: 10px 28px;
+    border-radius: 8px;
+    border: none;
+    background: #e0e0e0;
+    color: #333;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-reset:hover { background: #c8c8c8; }
+</style>
+</head>
+<body>
+
+<h1>Intro: Build a Syllable</h1>
+<p class="subtitle">Drag one consonant + one vowel into the box 👇</p>
+
+<div class="layout">
+
+  <!-- Consonants -->
+  <div class="panel">
+    <div class="panel-title">Consonants</div>
+    <p class="panel-sub">Drag one to the box</p>
+    <div class="cards-grid" id="consonantGrid"></div>
+  </div>
+
+  <!-- Drop Zone -->
+  <div class="drop-panel" id="dropPanel">
+    <div class="panel-title">Build a syllable</div>
+    <p class="hint">Drag one consonant + one vowel here</p>
+    <div class="drop-slots">
+      <div class="slot consonant-slot" id="consonantSlot">
+        <span class="placeholder" style="color:#bbb;font-size:0.75rem;text-align:center;line-height:1.3;">자음<br>Consonant</span>
+      </div>
+      <div class="slot vowel-slot" id="vowelSlot">
+        <span class="placeholder" style="color:#bbb;font-size:0.75rem;text-align:center;line-height:1.3;">모음<br>Vowel</span>
+      </div>
+    </div>
+    <div class="result-char" id="resultChar">–</div>
+  </div>
+
+  <!-- Vowels -->
+  <div class="panel">
+    <div class="panel-title">Vowels</div>
+    <p class="panel-sub">Drag one to the box</p>
+    <div class="cards-grid" id="vowelGrid"></div>
+  </div>
+
+</div>
+
+<button class="btn-reset" onclick="resetSlots()">🔄 Reset</button>
+
+<script>
+const consonants = ['ㄱ','ㄴ','ㄷ','ㅁ','ㅂ','ㅅ'];
+const vowels     = ['ㅏ','ㅣ','ㅗ','ㅜ'];
+
+// Korean syllable composition
+function compose(cho, jung) {
+  const choList  = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  const jungList = ['ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ','ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅠ','ㅡ','ㅢ','ㅣ'];
+  const ci = choList.indexOf(cho);
+  const ji = jungList.indexOf(jung);
+  if (ci === -1 || ji === -1) return '?';
+  return String.fromCharCode(0xAC00 + ci * 21 * 28 + ji * 28);
+}
+
+let dragData = null;
+
+function makeCard(char, type) {
+  const div = document.createElement('div');
+  div.className = `card ${type}`;
+  div.textContent = char;
+  div.draggable = true;
+  div.dataset.char = char;
+  div.dataset.type = type;
+
+  div.addEventListener('dragstart', e => {
+    dragData = { char, type };
+    div.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'copy';
+  });
+  div.addEventListener('dragend', () => {
+    div.classList.remove('dragging');
+  });
+  return div;
+}
+
+function buildGrids() {
+  const cg = document.getElementById('consonantGrid');
+  const vg = document.getElementById('vowelGrid');
+  cg.innerHTML = '';
+  vg.innerHTML = '';
+  consonants.forEach(c => cg.appendChild(makeCard(c, 'consonant')));
+  vowels.forEach(v => vg.appendChild(makeCard(v, 'vowel')));
+}
+
+// Drop panel events
+const dropPanel = document.getElementById('dropPanel');
+dropPanel.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropPanel.classList.add('dragover');
+});
+dropPanel.addEventListener('dragleave', () => dropPanel.classList.remove('dragover'));
+dropPanel.addEventListener('drop', e => {
+  e.preventDefault();
+  dropPanel.classList.remove('dragover');
+  if (!dragData) return;
+  placeInSlot(dragData.char, dragData.type);
+  dragData = null;
+});
+
+let slotData = { consonant: null, vowel: null };
+
+function placeInSlot(char, type) {
+  if (type === 'consonant') {
+    slotData.consonant = char;
+    renderSlot('consonantSlot', char, 'consonant');
+  } else {
+    slotData.vowel = char;
+    renderSlot('vowelSlot', char, 'vowel');
+  }
+  updateResult();
+}
+
+function renderSlot(slotId, char, type) {
+  const slot = document.getElementById(slotId);
+  slot.innerHTML = '';
+  slot.classList.add('filled');
+  slot.textContent = char;
+
+  const btn = document.createElement('button');
+  btn.className = 'remove-btn';
+  btn.textContent = '✕';
+  btn.onclick = () => clearSlot(type);
+  slot.appendChild(btn);
+}
+
+function clearSlot(type) {
+  slotData[type] = null;
+  const slotId = type === 'consonant' ? 'consonantSlot' : 'vowelSlot';
+  const slot = document.getElementById(slotId);
+  slot.innerHTML = `<span class="placeholder" style="color:#bbb;font-size:0.75rem;text-align:center;line-height:1.3;">${type === 'consonant' ? '자음<br>Consonant' : '모음<br>Vowel'}</span>`;
+  slot.classList.remove('filled');
+  updateResult();
+}
+
+function updateResult() {
+  const el = document.getElementById('resultChar');
+  if (slotData.consonant && slotData.vowel) {
+    el.textContent = compose(slotData.consonant, slotData.vowel);
+  } else {
+    el.textContent = '–';
+  }
+}
+
+function resetSlots() {
+  slotData = { consonant: null, vowel: null };
+  clearSlot('consonant');
+  clearSlot('vowel');
+}
+
+buildGrids();
+</script>
+</body>
+</html>

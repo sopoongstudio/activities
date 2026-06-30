@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match Vowels to Sounds</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.85rem;
+    color: #666;
+    margin-bottom: 20px;
+  }
+
+  .game-area {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  svg.lines {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .columns {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 2;
+  }
+
+  .card {
+    width: 72px;
+    height: 72px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    border: 3px solid transparent;
+    position: relative;
+  }
+
+  .card:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  .card.symbol {
+    background: #FFE066;
+    color: #1a1a2e;
+    border-color: #f0c800;
+  }
+
+  .card.sound {
+    background: #5cb85c;
+    color: #fff;
+    border-color: #4cae4c;
+  }
+
+  .card.selected {
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231,76,60,0.3);
+    transform: scale(1.1);
+  }
+
+  .card.matched {
+    opacity: 0.5;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .card.correct-flash {
+    animation: correctFlash 0.5s ease;
+  }
+
+  @keyframes correctFlash {
+    0%   { background: #2ecc71; }
+    100% { background: inherit; }
+  }
+
+  .buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: center;
+  }
+
+  button {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .btn-reset {
+    background: #e0e0e0;
+    color: #333;
+  }
+  .btn-reset:hover { background: #c8c8c8; }
+
+  .btn-check {
+    background: #3498db;
+    color: #fff;
+  }
+  .btn-check:hover { background: #2980b9; }
+
+  .result {
+    margin-top: 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    min-height: 28px;
+    text-align: center;
+  }
+
+  .result.success { color: #27ae60; }
+  .result.error   { color: #e74c3c; }
+
+  .score {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: #888;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>Match Vowels to Sounds</h1>
+<p class="subtitle">Click a vowel card, then click the matching sound 👆</p>
+
+<div class="game-area" id="gameArea">
+  <svg class="lines" id="svgLines"></svg>
+  <div class="columns">
+    <div class="col" id="symbolCol"></div>
+    <div class="col" id="soundCol"></div>
+  </div>
+</div>
+
+<div class="result" id="result"></div>
+<div class="score" id="score"></div>
+
+<div class="buttons">
+  <button class="btn-reset" onclick="resetGame()">🔄 Reset</button>
+  <button class="btn-check" onclick="checkAll()">✅ Check</button>
+</div>
+
+<script>
+const pairs = [
+  { symbol: 'ㅏ', sound: '아' },
+  { symbol: 'ㅓ', sound: '어' },
+  { symbol: 'ㅗ', sound: '오' },
+  { symbol: 'ㅜ', sound: '우' },
+  { symbol: 'ㅡ', sound: '으' },
+  { symbol: 'ㅣ', sound: '이' },
+  { symbol: 'ㅐ', sound: '애' },
+  { symbol: 'ㅔ', sound: '에' },
+];
+
+let selected = null; // { type: 'symbol'|'sound', index }
+let connections = {}; // symbolIndex -> soundIndex
+let matched = new Set();
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+let symbolOrder = [];
+let soundOrder = [];
+
+function buildCards() {
+  symbolOrder = shuffle(pairs.map((_, i) => i));
+  soundOrder = shuffle(pairs.map((_, i) => i));
+
+  const symCol = document.getElementById('symbolCol');
+  const sndCol = document.getElementById('soundCol');
+  symCol.innerHTML = '';
+  sndCol.innerHTML = '';
+
+  symbolOrder.forEach((pairIdx, pos) => {
+    const card = document.createElement('div');
+    card.className = 'card symbol';
+    card.textContent = pairs[pairIdx].symbol;
+    card.dataset.pairIdx = pairIdx;
+    card.dataset.pos = pos;
+    card.id = `sym-${pos}`;
+    card.onclick = () => onSymbolClick(pos);
+    symCol.appendChild(card);
+  });
+
+  soundOrder.forEach((pairIdx, pos) => {
+    const card = document.createElement('div');
+    card.className = 'card sound';
+    card.textContent = pairs[pairIdx].sound;
+    card.dataset.pairIdx = pairIdx;
+    card.dataset.pos = pos;
+    card.id = `snd-${pos}`;
+    card.onclick = () => onSoundClick(pos);
+    sndCol.appendChild(card);
+  });
+}
+
+function onSymbolClick(pos) {
+  if (matched.has(`sym-${pos}`)) return;
+  clearSelection();
+  selected = { type: 'symbol', pos };
+  document.getElementById(`sym-${pos}`).classList.add('selected');
+}
+
+function onSoundClick(pos) {
+  if (matched.has(`snd-${pos}`)) return;
+  if (!selected || selected.type !== 'symbol') {
+    clearSelection();
+    selected = { type: 'sound', pos };
+    document.getElementById(`snd-${pos}`).classList.add('selected');
+    return;
+  }
+
+  // Connect symbol -> sound
+  const symPos = selected.pos;
+  const sndPos = pos;
+
+  // Remove old connection from this symbol if exists
+  if (connections[symPos] !== undefined) {
+    delete connections[symPos];
+  }
+  // Remove any connection pointing to this sound
+  for (const k in connections) {
+    if (connections[k] === sndPos) delete connections[k];
+  }
+
+  connections[symPos] = sndPos;
+  clearSelection();
+  drawLines();
+}
+
+function clearSelection() {
+  document.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
+  selected = null;
+}
+
+function getCardCenter(el) {
+  const gameRect = document.getElementById('gameArea').getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left - gameRect.left + rect.width / 2,
+    y: rect.top - gameRect.top + rect.height / 2,
+  };
+}
+
+function drawLines() {
+  const svg = document.getElementById('svgLines');
+  svg.innerHTML = '';
+
+  // Update game area height for SVG
+  const gameArea = document.getElementById('gameArea');
+  const h = gameArea.offsetHeight;
+  svg.setAttribute('viewBox', `0 0 ${gameArea.offsetWidth} ${h}`);
+
+  for (const symPos in connections) {
+    const sndPos = connections[symPos];
+    const symEl = document.getElementById(`sym-${symPos}`);
+    const sndEl = document.getElementById(`snd-${sndPos}`);
+    if (!symEl || !sndEl) continue;
+
+    const a = getCardCenter(symEl);
+    const b = getCardCenter(sndEl);
+
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', a.x);
+    line.setAttribute('y1', a.y);
+    line.setAttribute('x2', b.x);
+    line.setAttribute('y2', b.y);
+    line.setAttribute('stroke', '#3498db');
+    line.setAttribute('stroke-width', '3');
+    line.setAttribute('stroke-linecap', 'round');
+    svg.appendChild(line);
+  }
+}
+
+function checkAll() {
+  let correct = 0;
+  let wrong = 0;
+
+  for (const symPos in connections) {
+    const sndPos = connections[symPos];
+    const pairIdxSym = symbolOrder[symPos];
+    const pairIdxSnd = soundOrder[sndPos];
+
+    const symEl = document.getElementById(`sym-${symPos}`);
+    const sndEl = document.getElementById(`snd-${sndPos}`);
+
+    if (pairIdxSym === pairIdxSnd) {
+      correct++;
+      symEl.classList.add('matched');
+      sndEl.classList.add('matched');
+      matched.add(`sym-${symPos}`);
+      matched.add(`snd-${sndPos}`);
+    } else {
+      wrong++;
+      symEl.style.borderColor = '#e74c3c';
+      sndEl.style.borderColor = '#e74c3c';
+      setTimeout(() => {
+        symEl.style.borderColor = '';
+        sndEl.style.borderColor = '';
+      }, 800);
+    }
+  }
+
+  const total = pairs.length;
+  const resultEl = document.getElementById('result');
+  const scoreEl = document.getElementById('score');
+
+  if (correct === total) {
+    resultEl.textContent = '🎉 Perfect! All correct!';
+    resultEl.className = 'result success';
+  } else {
+    resultEl.textContent = wrong > 0 ? `❌ ${wrong} wrong — try again!` : `Keep going! ${total - correct} left.`;
+    resultEl.className = 'result error';
+  }
+
+  scoreEl.textContent = `✅ ${correct} / ${total} correct`;
+  drawLines();
+}
+
+function resetGame() {
+  connections = {};
+  matched = new Set();
+  selected = null;
+  document.getElementById('result').textContent = '';
+  document.getElementById('score').textContent = '';
+  buildCards();
+  drawLines();
+}
+
+window.addEventListener('resize', drawLines);
+resetGame();
+</script>
+</body>
+</html>
