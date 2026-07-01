@@ -507,18 +507,7 @@ function buildPool() {
 
 function placeInSlot(wi, si, char, poolIndex) {
   const key = slotKey(wi, si);
-
-  // If slot already has something, return its pool card
-  if (slotData[key]) {
-    const oldPoolCard = document.getElementById(`pool-${slotData[key].poolIndex}`);
-    if (oldPoolCard) oldPoolCard.classList.remove('used');
-  }
-
   slotData[key] = { char, poolIndex };
-
-  // Mark pool card as used
-  const poolCard = document.getElementById(`pool-${poolIndex}`);
-  if (poolCard) poolCard.classList.add('used');
 
   // Render slot
   const slot = document.getElementById(`slot-${wi}-${si}`);
@@ -537,10 +526,6 @@ function placeInSlot(wi, si, char, poolIndex) {
 function removeFromSlot(wi, si) {
   const key = slotKey(wi, si);
   if (!slotData[key]) return;
-
-  const poolCard = document.getElementById(`pool-${slotData[key].poolIndex}`);
-  if (poolCard) poolCard.classList.remove('used');
-
   delete slotData[key];
 
   const slot = document.getElementById(`slot-${wi}-${si}`);
