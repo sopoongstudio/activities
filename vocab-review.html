@@ -271,21 +271,64 @@
     .card-emoji { font-size: 5.5rem; }
     .card-word { font-size: 2rem; }
   }
+  /* ── MATCHING GAME ── */
+  #matching-selector { width: 100%; max-width: 540px; display: none; }
+  #matching-area {
+    display: none; flex-direction: column; align-items: center;
+    width: 100%; max-width: 540px; padding: 16px; gap: 16px;
+  }
+  .match-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    align-items: stretch;
+  }
+  .match-col { display: flex; flex-direction: column; gap: 10px; }
+  .match-item {
+    background: #fff;
+    border: 2.5px solid var(--light-gray);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    font-size: 1rem;
+    font-weight: 700;
+    height: 80px;
+    display: flex; align-items: center; justify-content: center;
+    user-select: none;
+  }
+  .match-item.emoji-item { font-size: 2.2rem; }
+  .match-item:hover { border-color: var(--orange); background: #FFF6F0; }
+  .match-item.selected { border-color: var(--orange); background: #FFF0E6; box-shadow: 0 0 0 3px rgba(200,96,42,.2); }
+  .match-item.correct { border-color: #2e7d32; background: #E8F5E9; color: #2e7d32; pointer-events: none; }
+  .match-item.wrong { border-color: #c62828; background: #FFEBEE; animation: shake .3s; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .match-score {
+    font-size: 0.85rem; color: var(--gray);
+    background: var(--light-gray); padding: 4px 14px;
+    border-radius: 20px; align-self: flex-end;
+  }
+  #match-done {
+    display: none; flex-direction: column; align-items: center;
+    gap: 12px; text-align: center; padding: 20px;
+    background: #fff; border-radius: 20px; width: 100%;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  }
+  #match-done .done-emoji { font-size: 4rem; }
+  #match-done h2 { font-size: 1.3rem; color: var(--orange); }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <div class="label" style="font-size:.75rem;opacity:.7">세종학당 한국어 입문</div>
-    <h1>단어 복습 카드 🃏</h1>
-  </div>
+  <h1 style="width:100%; text-align:center;">단어 복습 카드 🃏</h1>
 </header>
-
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('review')">📚 범위별 리뷰</div>
-  <div class="tab" onclick="switchTab('newvocab')">✨ 새단어 (10개)</div>
-</div>
 
 <!-- ══ REVIEW TAB ══ -->
 <div id="selector">
@@ -331,8 +374,10 @@
       <div class="scope">모든 단어</div>
     </div>
   </div>
-  <div class="start-area">
-    <button class="btn-primary" onclick="startReview()">복습 시작하기 →</button>
+  <div class="start-area" style="display:flex; gap:8px; padding: 12px 20px 20px;">
+    <button class="btn-primary" style="background:#888; font-size:0.85rem; padding:10px 8px;" onclick="startReview()">📖 단어 복습</button>
+    <button class="btn-primary" style="font-size:0.85rem; padding:10px 8px;" onclick="startMatching()">🎯 매칭게임</button>
+    <button class="btn-primary" style="background: var(--light-orange); font-size:0.85rem; padding:10px 8px;" onclick="startNewVocab()">✨ 새단어</button>
   </div>
 </div>
 
@@ -374,17 +419,24 @@
   <button class="btn-primary" onclick="endSession()">처음으로 돌아가기</button>
 </div>
 
-<!-- ══ NEW VOCAB TAB ══ -->
-<div id="newvocab-selector">
-  <div class="mode-intro">
-    <h2>✨ 오늘의 새단어</h2>
-    <p>입문 교재 전체 어휘에서<br>무작위로 10개를 뽑아요.</p>
-  </div>
-  <button class="btn-primary" onclick="startNewVocab()">10개 뽑기 🎲</button>
-</div>
+<!-- ══ NEW VOCAB AREA ══ -->
+<div id="newvocab-area"></div>
 
-<div id="newvocab-area">
-  <!-- reuses card-area structure, controlled by JS -->
+<!-- ══ MATCHING TAB ══ -->
+<div id="matching-area">
+  <div class="match-score" id="match-score">0 / 6</div>
+  <div class="match-grid">
+    <div class="match-col" id="match-left"></div>
+    <div class="match-col" id="match-right"></div>
+  </div>
+  <div id="match-done">
+    <div class="done-emoji">🎉</div>
+    <h2>완벽해요!</h2>
+    <p id="match-done-text"></p>
+    <button class="btn-primary" onclick="startMatching()">다시 6개 🎲</button>
+    <button class="btn-primary" style="background:#888; margin-top:6px;" onclick="endMatching()">← 돌아가기</button>
+  </div>
+  <button class="btn-primary" style="margin-top:4px; background:#888;" id="match-back-btn" onclick="endMatching()">← 돌아가기</button>
 </div>
 
 <script>
@@ -526,8 +578,8 @@ const VOCAB = [
   { w:'넓다', r:'neol-da', e:'to be wide / broad', emoji:'↔️', sec:'double-batchim' },
   { w:'흙', r:'heuk', e:'soil / earth', emoji:'🌱', sec:'double-batchim' },
   { w:'삶', r:'sam', e:'life', emoji:'✨', sec:'double-batchim' },
-  { w:'호랑이', r:'ho-rang-i', e:'tiger', emoji:'🐯', sec:'double-batchim' },
-  { w:'수박', r:'su-bak', e:'watermelon', emoji:'🍉', sec:'double-batchim' },
+  { w:'밝다', r:'bak-da', e:'to be bright', emoji:'☀️', sec:'double-batchim' },
+  { w:'젊다', r:'jeom-da', e:'to be young', emoji:'🧑', sec:'double-batchim' },
 
   // ── CH.10 연음 / 경음화 (Extended sound rules) ──
   { w:'한국어', r:'[한구거]', e:'Korean (linking sound)', emoji:'🇰🇷', sec:'extended' },
@@ -594,9 +646,11 @@ let isNewVocab = false;
 // ── TAB SWITCH ──
 function switchTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i === (tab==='review'?0:1)));
+  const tabIndex = tab==='review' ? 0 : 1;
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i === tabIndex));
   document.getElementById('selector').style.display = tab==='review' ? 'block' : 'none';
   document.getElementById('newvocab-selector').style.display = tab==='newvocab' ? 'flex' : 'none';
+  document.getElementById('matching-area').style.display = 'none';
   hideCardAreas();
 }
 
@@ -626,11 +680,12 @@ function startReview() {
 
 // ── NEW VOCAB START ──
 function startNewVocab() {
-  let pool = shuffle([...VOCAB]);
-  deck = pool.slice(0, 10);
+  let pool = selectedSection === 'all' ? [...VOCAB] : VOCAB.filter(v => v.sec === selectedSection);
+  pool = shuffle([...pool]);
+  deck = pool.slice(0, Math.min(10, pool.length));
   cardIndex = 0;
   isNewVocab = true;
-  document.getElementById('newvocab-selector').style.display = 'none';
+  document.getElementById('selector').style.display = 'none';
   document.getElementById('card-area').style.display = 'flex';
   showCard();
 }
@@ -681,11 +736,7 @@ function showDone() {
 function endSession() {
   document.getElementById('card-area').style.display = 'none';
   document.getElementById('done-screen').style.display = 'none';
-  if (isNewVocab) {
-    document.getElementById('newvocab-selector').style.display = 'flex';
-  } else {
-    document.getElementById('selector').style.display = 'block';
-  }
+  document.getElementById('selector').style.display = 'block';
 }
 
 function shuffleDeck() {
@@ -714,8 +765,131 @@ function shuffle(arr) {
   return arr;
 }
 
+// ── MATCHING GAME ──
+let matchSection = 'basic-vowel';
+let matchSelected = null; // { type: 'emoji'|'word', index: number, el: element }
+let matchPairs = [];
+let matchSolved = 0;
+
+function selectMatchSection(el, sec) {
+  document.querySelectorAll('#matching-section-grid .section-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  matchSection = sec;
+}
+
+function startMatching() {
+  let pool = selectedSection === 'all' ? [...VOCAB] : VOCAB.filter(v => v.sec === selectedSection);
+  if (pool.length < 3) { alert('이 범위의 단어가 부족해요!'); return; }
+  matchPairs = shuffle([...pool]).slice(0, 6);
+  matchSolved = 0;
+  matchSelected = null;
+
+  document.getElementById('selector').style.display = 'none';
+  document.getElementById('matching-area').style.display = 'flex';
+  document.getElementById('match-done').style.display = 'none';
+  document.getElementById('match-back-btn').style.display = 'block';
+  renderMatchGame();
+}
+
+function endMatching() {
+  document.getElementById('matching-area').style.display = 'none';
+  document.getElementById('selector').style.display = 'block';
+}
+
+function renderMatchGame() {
+  const leftCol = document.getElementById('match-left');
+  const rightCol = document.getElementById('match-right');
+  leftCol.innerHTML = '';
+  rightCol.innerHTML = '';
+
+  const shuffledWords = shuffle([...matchPairs.map((p,i) => ({...p, idx: i}))]);
+
+  matchPairs.forEach((pair, i) => {
+    const el = document.createElement('div');
+    el.className = 'match-item emoji-item';
+    el.textContent = pair.emoji;
+    el.dataset.idx = i;
+    el.dataset.type = 'emoji';
+    el.onclick = () => handleMatchClick(el, 'emoji', i);
+    leftCol.appendChild(el);
+  });
+
+  shuffledWords.forEach((pair) => {
+    const el = document.createElement('div');
+    el.className = 'match-item';
+    el.textContent = pair.w;
+    el.dataset.idx = pair.idx;
+    el.dataset.type = 'word';
+    el.onclick = () => handleMatchClick(el, 'word', pair.idx);
+    rightCol.appendChild(el);
+  });
+
+  updateMatchScore();
+}
+
+function handleMatchClick(el, type, idx) {
+  if (el.classList.contains('correct')) return;
+
+  if (!matchSelected) {
+    // first selection
+    matchSelected = { type, idx, el };
+    el.classList.add('selected');
+    return;
+  }
+
+  if (matchSelected.el === el) {
+    // deselect same
+    el.classList.remove('selected');
+    matchSelected = null;
+    return;
+  }
+
+  if (matchSelected.type === type) {
+    // same side — switch selection
+    matchSelected.el.classList.remove('selected');
+    matchSelected = { type, idx, el };
+    el.classList.add('selected');
+    return;
+  }
+
+  // different sides — check match
+  const prevEl = matchSelected.el;
+  const prevIdx = matchSelected.idx;
+  matchSelected = null;
+  prevEl.classList.remove('selected');
+
+  if (prevIdx == idx) {
+    // correct!
+    el.classList.add('correct');
+    prevEl.classList.add('correct');
+    matchSolved++;
+    updateMatchScore();
+    if (matchSolved >= matchPairs.length) {
+      setTimeout(showMatchDone, 600);
+    }
+  } else {
+    // wrong
+    el.classList.add('wrong');
+    prevEl.classList.add('wrong');
+    setTimeout(() => {
+      el.classList.remove('wrong');
+      prevEl.classList.remove('wrong');
+    }, 500);
+  }
+}
+
+function updateMatchScore() {
+  document.getElementById('match-score').textContent = `${matchSolved} / ${matchPairs.length}`;
+}
+
+function showMatchDone() {
+  document.getElementById('match-done').style.display = 'flex';
+  document.getElementById('match-back-btn').style.display = 'none';
+  document.getElementById('match-done-text').textContent = `${matchPairs.length}개 모두 맞췄어요! 🌟`;
+}
+
 // Init
-switchTab('review');
+document.getElementById('selector').style.display = 'block';
 </script>
 </body>
 </html>
