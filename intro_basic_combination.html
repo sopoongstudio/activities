@@ -195,6 +195,29 @@
     text-align: center;
   }
 
+  .card.touch-selected {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 3px #e74c3c;
+  }
+
+  #touch-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    opacity: 0.85;
+    transform: translate(-50%, -50%);
+  }
+  #touch-ghost.consonant { background: #f08080; color: #fff; }
+  #touch-ghost.vowel     { background: #7eb8e8; color: #fff; }
+
   .btn-reset {
     margin-top: 20px;
     padding: 10px 28px;
@@ -213,7 +236,9 @@
 <body>
 
 <h1>Intro: Build a Syllable</h1>
-<p class="subtitle">Drag one consonant + one vowel into the box 👇</p>
+<p class="subtitle">Drag (or tap) one consonant + one vowel into the box 👇</p>
+
+<div id="touch-ghost"></div>
 
 <div class="layout">
 
@@ -333,9 +358,48 @@ function makeCard(char, type) {
     if (type === 'vowel') {
       speakKorean(char);
     } else {
-      speakKorean(compose(char, 'ㅡ')); // representative sound, e.g. ㄱ -> 그
+      speakKorean(compose(char, 'ㅡ'));
     }
   });
+
+  // ── Touch support ──
+  div.addEventListener('touchstart', e => {
+    e.preventDefault();
+    dragData = { char, type };
+    const ghost = document.getElementById('touch-ghost');
+    ghost.textContent = char;
+    ghost.className = '';
+    ghost.id = 'touch-ghost';
+    ghost.classList.add(type);
+    ghost.style.display = 'flex';
+    const t = e.touches[0];
+    ghost.style.left = t.clientX + 'px';
+    ghost.style.top  = t.clientY + 'px';
+    div.classList.add('touch-selected');
+  }, { passive: false });
+
+  div.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const ghost = document.getElementById('touch-ghost');
+    ghost.style.left = t.clientX + 'px';
+    ghost.style.top  = t.clientY + 'px';
+  }, { passive: false });
+
+  div.addEventListener('touchend', e => {
+    e.preventDefault();
+    const ghost = document.getElementById('touch-ghost');
+    ghost.style.display = 'none';
+    div.classList.remove('touch-selected');
+    if (!dragData) return;
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    // accept drop anywhere inside the drop panel
+    if (el?.closest('#dropPanel')) {
+      placeInSlot(dragData.char, dragData.type);
+    }
+    dragData = null;
+  }, { passive: false });
   return div;
 }
 

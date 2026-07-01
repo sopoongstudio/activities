@@ -201,7 +201,32 @@
   .pool-card.dragging { opacity: 0.35; }
   .pool-card.used { opacity: 0.25; pointer-events: none; }
 
-  /* Buttons */
+  .pool-card.touch-selected {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 3px #e74c3c;
+    border-color: #e74c3c;
+  }
+
+  #touch-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    background: #FFE066;
+    border: 2px solid #f0c800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    opacity: 0.85;
+    display: none;
+    transform: translate(-50%, -50%);
+  }
+
   .buttons {
     display: flex;
     gap: 12px;
@@ -237,7 +262,9 @@
 <body>
 
 <h1>Intro: Find the Right Letters</h1>
-<p class="subtitle">Drag the correct vowels from below into each word's boxes 👇</p>
+<p class="subtitle">Drag (or tap) the correct vowels from below into each word's boxes 👇</p>
+
+<div id="touch-ghost"></div>
 
 <div class="words-row" id="wordsRow"></div>
 
@@ -441,6 +468,47 @@ function buildPool() {
     });
     card.addEventListener('dragend', () => card.classList.remove('dragging'));
     card.addEventListener('mouseenter', () => speakKorean(char));
+
+    // ── Touch support ──
+    card.addEventListener('touchstart', e => {
+      e.preventDefault();
+      dragData = { char, poolIndex: idx };
+      // show ghost
+      const ghost = document.getElementById('touch-ghost');
+      ghost.textContent = char;
+      ghost.style.display = 'flex';
+      const t = e.touches[0];
+      ghost.style.left = t.clientX + 'px';
+      ghost.style.top  = t.clientY + 'px';
+      card.classList.add('touch-selected');
+    }, { passive: false });
+
+    card.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      const ghost = document.getElementById('touch-ghost');
+      ghost.style.left = t.clientX + 'px';
+      ghost.style.top  = t.clientY + 'px';
+    }, { passive: false });
+
+    card.addEventListener('touchend', e => {
+      e.preventDefault();
+      const ghost = document.getElementById('touch-ghost');
+      ghost.style.display = 'none';
+      card.classList.remove('touch-selected');
+
+      if (!dragData) return;
+      const t = e.changedTouches[0];
+      // find which slot is under the finger
+      const el = document.elementFromPoint(t.clientX, t.clientY);
+      const slot = el?.closest('.slot');
+      if (slot) {
+        const wi = parseInt(slot.dataset.wi);
+        const si = parseInt(slot.dataset.si);
+        placeInSlot(wi, si, dragData.char, dragData.poolIndex);
+      }
+      dragData = null;
+    }, { passive: false });
     pool.appendChild(card);
   });
 }
