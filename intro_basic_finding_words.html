@@ -56,6 +56,23 @@
     max-width: 200px;
   }
 
+  @media (max-width: 500px) {
+    .words-row {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      justify-content: flex-start;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .word-card {
+      flex: 0 0 75vw;
+      max-width: 75vw;
+      min-width: unset;
+      scroll-snap-align: center;
+    }
+  }
+
   .word-emoji { font-size: 2.2rem; }
 
   .btn-speak {

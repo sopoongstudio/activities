@@ -33,11 +33,12 @@
 
   .layout {
     display: flex;
-    gap: 20px;
+    gap: 16px;
     align-items: flex-start;
     justify-content: center;
     width: 100%;
     max-width: 640px;
+    flex-wrap: wrap;
   }
 
   .panel {
@@ -49,7 +50,33 @@
     flex-direction: column;
     align-items: center;
     gap: 10px;
-    min-width: 140px;
+    min-width: 120px;
+    flex: 1;
+  }
+
+  /* On narrow screens: consonants + vowels side by side, drop zone full width below */
+  @media (max-width: 500px) {
+    .layout {
+      flex-direction: column;
+      align-items: center;
+    }
+    .panels-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      justify-content: center;
+    }
+    .panel {
+      flex: 1;
+      min-width: 0;
+    }
+    .drop-panel {
+      width: 100%;
+      min-height: unset;
+    }
+    .cards-grid {
+      grid-template-columns: 1fr 1fr;
+    }
   }
 
   .panel-title {
@@ -241,12 +268,20 @@
 <div id="touch-ghost"></div>
 
 <div class="layout">
+  <div class="panels-row">
+    <!-- Consonants -->
+    <div class="panel">
+      <div class="panel-title">Consonants</div>
+      <p class="panel-sub">Drag one to the box</p>
+      <div class="cards-grid" id="consonantGrid"></div>
+    </div>
 
-  <!-- Consonants -->
-  <div class="panel">
-    <div class="panel-title">Consonants</div>
-    <p class="panel-sub">Drag one to the box</p>
-    <div class="cards-grid" id="consonantGrid"></div>
+    <!-- Vowels -->
+    <div class="panel">
+      <div class="panel-title">Vowels</div>
+      <p class="panel-sub">Drag one to the box</p>
+      <div class="cards-grid" id="vowelGrid"></div>
+    </div>
   </div>
 
   <!-- Drop Zone -->
@@ -262,13 +297,6 @@
       </div>
     </div>
     <div class="result-char" id="resultChar">–</div>
-  </div>
-
-  <!-- Vowels -->
-  <div class="panel">
-    <div class="panel-title">Vowels</div>
-    <p class="panel-sub">Drag one to the box</p>
-    <div class="cards-grid" id="vowelGrid"></div>
   </div>
 
 </div>
