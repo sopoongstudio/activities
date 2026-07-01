@@ -56,25 +56,20 @@
     max-width: 200px;
   }
 
-  .word-emoji { font-size: 2rem; }
+  .word-emoji { font-size: 2.2rem; }
 
-  .word-korean {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #1a1a2e;
+  .btn-speak {
+    background: #e8f4fd;
+    border: 2px solid #3498db;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
   }
-
-  .word-roman {
-    font-size: 0.8rem;
-    color: #888;
-    font-style: italic;
-  }
-
-  .word-english {
-    font-size: 0.75rem;
-    color: #aaa;
-    margin-bottom: 4px;
-  }
+  .btn-speak:hover { background: #cce5f6; transform: scale(1.1); }
+  .btn-speak:active { transform: scale(0.95); }
 
   .slots-row {
     display: flex;
@@ -262,7 +257,7 @@
 <body>
 
 <h1>Intro: Find the Right Letters</h1>
-<p class="subtitle">Drag (or tap) the correct vowels from below into each word's boxes 👇</p>
+<p class="subtitle">Press 🔊 to hear the word, then drag the correct letters into the boxes 👇</p>
 
 <div id="touch-ghost"></div>
 
@@ -376,16 +371,15 @@ const words = [
   },
 ];
 
-// Build pool: all syllable chars shuffled with some distractors
-const distractors = ['우', '아', '어'];
+// Build pool: unique answer chars + non-overlapping distractors
+const distractors = ['우', '어', '으', '에', '애'];
 let poolSource = [];
 
 function buildPoolSource() {
-  let all = [];
-  words.forEach(w => w.syllables.forEach(s => all.push(s.char)));
-  // add distractors
-  distractors.forEach(d => all.push(d));
-  // shuffle
+  const answerSet = new Set();
+  words.forEach(w => w.syllables.forEach(s => answerSet.add(s.char)));
+  const extras = distractors.filter(d => !answerSet.has(d)).slice(0, 3);
+  let all = [...answerSet, ...extras];
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
@@ -407,9 +401,7 @@ function buildWords() {
     card.className = 'word-card';
     card.innerHTML = `
       <div class="word-emoji">${word.emoji}</div>
-      <div class="word-korean">${word.korean}</div>
-      <div class="word-roman">${word.roman}</div>
-      <div class="word-english">${word.english}</div>
+      <button class="btn-speak" onclick="speakKorean('${word.korean}')" title="Listen">🔊</button>
       <div class="slots-row" id="slots-${wi}"></div>
     `;
     card.addEventListener('mouseenter', () => speakKorean(word.korean));
