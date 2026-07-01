@@ -335,49 +335,49 @@
   <div class="section-grid">
     <div class="section-btn selected" onclick="selectSection(this, 'basic-vowel')" data-section="basic-vowel">
       <div class="label">📖 기본 모음</div>
-      <div class="sublabel">Ch. 1–2</div>
+      <div class="sublabel">Basic Vowels</div>
       <div class="scope">아·어·오·우·으·이</div>
     </div>
     <div class="section-btn" onclick="selectSection(this, 'basic-consonant')" data-section="basic-consonant">
       <div class="label">📖 기본 자음</div>
-      <div class="sublabel">Ch. 2–4</div>
+      <div class="sublabel">Basic Consonants</div>
       <div class="scope">ㄱ·ㄴ·ㄷ·ㄹ·ㅁ·ㅂ·ㅅ·ㅈ·ㅎ</div>
     </div>
     <div class="section-btn" onclick="selectSection(this, 'double-vowel')" data-section="double-vowel">
       <div class="label">📖 이중 모음</div>
-      <div class="sublabel">Ch. 5–6</div>
+      <div class="sublabel">Double Vowels</div>
       <div class="scope">ㅘ·ㅙ·ㅚ·ㅝ·ㅟ·ㅢ 등</div>
     </div>
     <div class="section-btn" onclick="selectSection(this, 'batchim')" data-section="batchim">
       <div class="label">📖 받침</div>
-      <div class="sublabel">Ch. 7–8</div>
+      <div class="sublabel">Final Consonants</div>
       <div class="scope">ㄱ·ㄴ·ㄷ·ㄹ·ㅁ·ㅂ·ㅇ 받침</div>
     </div>
     <div class="section-btn" onclick="selectSection(this, 'double-batchim')" data-section="double-batchim">
       <div class="label">📖 겹받침</div>
-      <div class="sublabel">Ch. 9</div>
+      <div class="sublabel">Double Final Consonants</div>
       <div class="scope">ㄳ·ㄵ·ㄻ·ㄼ·ㄾ 등</div>
     </div>
     <div class="section-btn" onclick="selectSection(this, 'extended')" data-section="extended">
-      <div class="label">📖 연음 / 경음화</div>
-      <div class="sublabel">Ch. 10</div>
+      <div class="label">📖 필수 발음규칙</div>
+      <div class="sublabel">Sound Rules</div>
       <div class="scope">연음법칙·경음화</div>
     </div>
     <div class="section-btn" onclick="selectSection(this, 'expression')" data-section="expression">
       <div class="label">💬 교실 표현</div>
-      <div class="sublabel">Ch. 11–12</div>
+      <div class="sublabel">Classroom Expressions</div>
       <div class="scope">인사·교실 표현</div>
     </div>
-    <div class="section-btn" onclick="selectSection(this, 'all')" data-section="all">
-      <div class="label">🌟 전체</div>
-      <div class="sublabel">Ch. 1–12</div>
-      <div class="scope">모든 단어</div>
+    <div class="section-btn" onclick="selectSection(this, 'sentence')" data-section="sentence">
+      <div class="label">✏️ 문장 만들기</div>
+      <div class="sublabel">Make Sentences</div>
+      <div class="scope">명사 + 동사/형용사</div>
     </div>
   </div>
   <div class="start-area" style="display:flex; gap:8px; padding: 12px 20px 20px;">
-    <button class="btn-primary" style="background:#888; font-size:0.85rem; padding:10px 8px;" onclick="startReview()">📖 단어 복습</button>
-    <button class="btn-primary" style="font-size:0.85rem; padding:10px 8px;" onclick="startMatching()">🎯 매칭게임</button>
-    <button class="btn-primary" style="background: var(--light-orange); font-size:0.85rem; padding:10px 8px;" onclick="startNewVocab()">✨ 새단어</button>
+    <button id="btn-review" class="btn-primary" style="background:#888; font-size:0.85rem; padding:10px 8px;" onclick="startReview()">📖 단어 복습</button>
+    <button id="btn-matching" class="btn-primary" style="font-size:0.85rem; padding:10px 8px;" onclick="startMatching()">🎯 매칭게임</button>
+    <button id="btn-newvocab" class="btn-primary" style="background: var(--light-orange); font-size:0.85rem; padding:10px 8px;" onclick="startNewVocab()">✨ 새단어</button>
   </div>
 </div>
 
@@ -595,7 +595,27 @@ const VOCAB = [
   { w:'흙이', r:'[흘기]', e:'soil (subject)', emoji:'🌿', sec:'extended' },
   { w:'맑아요', r:'[말가요]', e:'(it\'s) clear / sunny', emoji:'🌤️', sec:'extended' },
 
-  // ── CH.11 교실 표현 1 (Classroom expressions 1) ──
+  // ── 문장 만들기 (Make Sentences) ──
+  { w:'우유가 좋아요', r:'u-yu-ga jo-a-yo', e:'I like milk', emoji:'🥛', sec:'sentence' },
+  { w:'친구가 많아요', r:'chin-gu-ga ma-na-yo', e:'I have many friends', emoji:'👫', sec:'sentence' },
+  { w:'강아지가 좋아요', r:'gang-a-ji-ga jo-a-yo', e:'I like puppies', emoji:'🐶', sec:'sentence' },
+  { w:'책이 많아요', r:'chae-gi ma-na-yo', e:'There are many books', emoji:'📚', sec:'sentence' },
+  { w:'오이가 싫어요', r:'o-i-ga si-reo-yo', e:'I don\'t like cucumber', emoji:'🥒', sec:'sentence' },
+  { w:'물이 좋아요', r:'mu-ri jo-a-yo', e:'I like water', emoji:'💧', sec:'sentence' },
+  { w:'친구가 웃어요', r:'chin-gu-ga u-seo-yo', e:'My friend laughs', emoji:'😄', sec:'sentence' },
+  { w:'아이가 웃어요', r:'a-i-ga u-seo-yo', e:'The child laughs', emoji:'👶', sec:'sentence' },
+  { w:'강아지가 앉아요', r:'gang-a-ji-ga an-ja-yo', e:'The puppy sits', emoji:'🐶', sec:'sentence' },
+  { w:'나비가 좋아요', r:'na-bi-ga jo-a-yo', e:'I like butterflies', emoji:'🦋', sec:'sentence' },
+  { w:'흙이 많아요', r:'heul-gi ma-na-yo', e:'There\'s lots of soil', emoji:'🌱', sec:'sentence' },
+  { w:'의자가 없어요', r:'ui-ja-ga eop-seo-yo', e:'There\'s no chair', emoji:'🪑', sec:'sentence' },
+  { w:'고양이가 많아요', r:'go-yang-i-ga ma-na-yo', e:'There are many cats', emoji:'🐱', sec:'sentence' },
+  { w:'아이가 가요', r:'a-i-ga ga-yo', e:'The child goes', emoji:'👶', sec:'sentence' },
+  { w:'책을 읽어요', r:'chae-geul il-geo-yo', e:'(I) read a book', emoji:'📖', sec:'sentence' },
+  { w:'친구가 없어요', r:'chin-gu-ga eop-seo-yo', e:'I have no friends', emoji:'😢', sec:'sentence' },
+  { w:'사과가 좋아요', r:'sa-gwa-ga jo-a-yo', e:'I like apples', emoji:'🍎', sec:'sentence' },
+  { w:'닭이 웃어요', r:'dal-gi u-seo-yo', e:'The chicken laughs', emoji:'🐔', sec:'sentence' },
+  { w:'흙이 좋아요', r:'heul-gi jo-a-yo', e:'I like soil', emoji:'🌿', sec:'sentence' },
+  { w:'강아지가 아파요', r:'gang-a-ji-ga a-pa-yo', e:'The puppy is sick', emoji:'🐶', sec:'sentence' },
   { w:'선생님을 보세요', r:'seon-saeng-ni-meul bo-se-yo', e:'Look at the teacher', emoji:'👩‍🏫', sec:'expression' },
   { w:'여러분, 들으세요', r:'yeo-reo-bun deu-reu-se-yo', e:'Everyone, listen please', emoji:'👂', sec:'expression' },
   { w:'책을 읽으세요', r:'chae-geul il-geu-se-yo', e:'Read the book', emoji:'📖', sec:'expression' },
@@ -630,9 +650,9 @@ const SECTION_LABELS = {
   'double-vowel': '이중 모음',
   'batchim': '받침',
   'double-batchim': '겹받침',
-  'extended': '연음/경음화',
+  'extended': '필수 발음규칙',
   'expression': '교실 표현',
-  'all': '전체'
+  'sentence': '문장 만들기'
 };
 
 // ── STATE ──
@@ -664,11 +684,15 @@ function selectSection(el, sec) {
   document.querySelectorAll('.section-btn').forEach(b => b.classList.remove('selected'));
   el.classList.add('selected');
   selectedSection = sec;
+  const isSentence = sec === 'sentence';
+  document.getElementById('btn-review').style.display = isSentence ? 'none' : 'block';
+  document.getElementById('btn-newvocab').style.display = isSentence ? 'none' : 'block';
+  document.getElementById('btn-matching').style.flex = isSentence ? '1' : '';
 }
 
 // ── REVIEW START ──
 function startReview() {
-  let pool = selectedSection === 'all' ? [...VOCAB] : VOCAB.filter(v => v.sec === selectedSection);
+  let pool = VOCAB.filter(v => v.sec === selectedSection);
   if (!pool.length) { alert('이 범위의 단어가 없어요!'); return; }
   deck = shuffle([...pool]);
   cardIndex = 0;
@@ -680,7 +704,7 @@ function startReview() {
 
 // ── NEW VOCAB START ──
 function startNewVocab() {
-  let pool = selectedSection === 'all' ? [...VOCAB] : VOCAB.filter(v => v.sec === selectedSection);
+  let pool = VOCAB.filter(v => v.sec === selectedSection);
   pool = shuffle([...pool]);
   deck = pool.slice(0, Math.min(10, pool.length));
   cardIndex = 0;
@@ -778,7 +802,7 @@ function selectMatchSection(el, sec) {
 }
 
 function startMatching() {
-  let pool = selectedSection === 'all' ? [...VOCAB] : VOCAB.filter(v => v.sec === selectedSection);
+  let pool = VOCAB.filter(v => v.sec === selectedSection);
   if (pool.length < 3) { alert('이 범위의 단어가 부족해요!'); return; }
   matchPairs = shuffle([...pool]).slice(0, 6);
   matchSolved = 0;
