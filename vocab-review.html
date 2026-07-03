@@ -450,7 +450,7 @@ const VOCAB = [
   { w:'오', r:'o', e:'five', emoji:'5️⃣', sec:'basic-vowel' },
   { w:'오이', r:'o-i', e:'cucumber', emoji:'🥒', sec:'basic-vowel' },
   { w:'아이', r:'a-i', e:'child', emoji:'👶', sec:'basic-vowel' },
-  { w:'아우', r:'a-u', e:'younger sibling', emoji:'👦', sec:'basic-vowel' },
+  { w:'아우', r:'a-u', e:'younger sibling', emoji:'👦', label:'younger sibling', sec:'basic-vowel' },
   { w:'우유', r:'u-yu', e:'milk', emoji:'🥛', sec:'basic-vowel' },
   { w:'여우', r:'yeo-u', e:'fox', emoji:'🦊', sec:'basic-vowel' },
   { w:'야구', r:'ya-gu', e:'baseball', emoji:'⚾', sec:'basic-vowel' },
@@ -459,7 +459,7 @@ const VOCAB = [
   // ── CH.2 기본 자음 (Basic consonants) ──
   { w:'나무', r:'na-mu', e:'tree', emoji:'🌳', sec:'basic-consonant' },
   { w:'노래', r:'no-rae', e:'song', emoji:'🎵', sec:'basic-consonant' },
-  { w:'이마', r:'i-ma', e:'forehead', emoji:'🧠', sec:'basic-consonant' },
+  { w:'이마', r:'i-ma', e:'forehead', emoji:'😊', sec:'basic-consonant' },
   { w:'이모', r:'i-mo', e:'aunt (mother\'s side)', emoji:'👩', sec:'basic-consonant' },
   { w:'나라', r:'na-ra', e:'country', emoji:'🌍', sec:'basic-consonant' },
   { w:'미로', r:'mi-ro', e:'maze', emoji:'🌀', sec:'basic-consonant' },
@@ -480,7 +480,7 @@ const VOCAB = [
   // ── CH.3 거센소리 (Aspirated consonants) ──
   { w:'치마', r:'chi-ma', e:'skirt', emoji:'👗', sec:'basic-consonant' },
   { w:'고추', r:'go-chu', e:'chili pepper', emoji:'🌶️', sec:'basic-consonant' },
-  { w:'허리', r:'heo-ri', e:'waist', emoji:'🧍', sec:'basic-consonant' },
+  { w:'허리', r:'heo-ri', e:'waist', emoji:'🧍', label:'waist', sec:'basic-consonant' },
   { w:'호주', r:'ho-ju', e:'Australia', emoji:'🇦🇺', sec:'basic-consonant' },
   { w:'카메라', r:'ka-me-ra', e:'camera', emoji:'📷', sec:'basic-consonant' },
   { w:'카레', r:'ka-re', e:'curry', emoji:'🍛', sec:'basic-consonant' },
@@ -831,7 +831,9 @@ function renderMatchGame() {
   matchPairs.forEach((pair, i) => {
     const el = document.createElement('div');
     el.className = 'match-item emoji-item';
-    el.textContent = pair.emoji;
+    el.style.flexDirection = 'column';
+    el.style.gap = '2px';
+    el.innerHTML = `<span>${pair.emoji}</span>${pair.label ? `<span style="font-size:0.6rem;font-weight:600;color:#888;">${pair.label}</span>` : ''}`;
     el.dataset.idx = i;
     el.dataset.type = 'emoji';
     el.onclick = () => handleMatchClick(el, 'emoji', i);
@@ -844,7 +846,15 @@ function renderMatchGame() {
     el.textContent = pair.w;
     el.dataset.idx = pair.idx;
     el.dataset.type = 'word';
-    el.onclick = () => handleMatchClick(el, 'word', pair.idx);
+    el.onclick = () => {
+      if (window.speechSynthesis) {
+        const utt = new SpeechSynthesisUtterance(pair.w);
+        utt.lang = 'ko-KR'; utt.rate = 0.85;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utt);
+      }
+      handleMatchClick(el, 'word', pair.idx);
+    };
     rightCol.appendChild(el);
   });
 
