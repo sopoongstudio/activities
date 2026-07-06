@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>대화 드릴 테스트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;800&family=DM+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8FAFC; --surface2: #F1F5F9; --border: #E2E8F0;
+    --text: #0F172A; --text-muted: #64748B;
+  }
+  body { font-family: 'DM Sans','Noto Sans KR',sans-serif; background: var(--bg); color: var(--text); padding: 1.2rem; max-width: 600px; margin: 0 auto; }
+  h2 { font-size: 1.1rem; margin-bottom: .3rem; }
+  .subtitle { font-size: .82rem; color: var(--text-muted); margin-bottom: 1.2rem; }
+  .dlg-line { border-radius: 12px; padding: .8rem 1rem; margin-bottom: .4rem; display: flex; gap: .8rem; align-items: center; }
+  .dlg-line.me { background: linear-gradient(135deg,#F0FDF4,#DCFCE7); border: 2px solid #52b788; }
+  .dlg-line.other { background: white; border: 1px solid var(--border); }
+  .speaker { font-size: .68rem; font-weight: 700; min-width: 2rem; flex-shrink: 0; text-transform: uppercase; }
+  .me .speaker { color: #276749; }
+  .other .speaker { color: #64748B; }
+  .line-body { flex: 1; min-width: 0; }
+  .kr { font-family: 'Noto Sans KR',sans-serif; font-size: 1rem; margin-bottom: .15rem; }
+  .me .kr { font-weight: 800; color: #0F172A; }
+  .other .kr { font-weight: 600; color: #334155; }
+  .rom { font-size: .68rem; color: #4D96FF; margin-bottom: .1rem; }
+  .en { font-size: .76rem; color: var(--text-muted); }
+  .btns { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: .3rem; }
+  .btns button { background: none; border: none; font-size: 1.2rem; cursor: pointer; padding: .2rem; line-height: 1; }
+  .feedback { margin-bottom: .5rem; min-height: 0; }
+  .play-all { background: #4D96FF; color: white; border: none; padding: .45rem 1rem; border-radius: 99px; font-size: .78rem; font-weight: 600; cursor: pointer; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .dia-label { font-size: .7rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: .2rem; }
+  .dia-title { font-family: 'Noto Sans KR',sans-serif; font-size: 1rem; font-weight: 700; }
+  .dia-title-en { font-size: .78rem; color: var(--text-muted); }
+  .hint { font-size: .75rem; color: var(--text-muted); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<h2>🎤 대화 드릴 테스트</h2>
+<p class="subtitle">자기소개 · 2번째 시나리오 — 녹음 먼저, 텍스트는 덤</p>
+
+<div id="dialogue-container"></div>
+
+<script>
+const dialogue = {
+  title: '오랜만에 친구를 만났을 때',
+  titleEn: "Running into a friend you haven't seen in a while",
+  lines: [
+    {speaker:'지수', kr:'어머, 오랜만이에요! 잘 지냈어요?', rom:'eo-meo, o-raen-ma-ni-e-yo! jal ji-nae-sseo-yo?', en:"Oh wow, long time no see! Have you been well?", isMe:false},
+    {speaker:'나', kr:'네! 잘 지냈어요. 요즘 어떻게 지내요?', rom:'ne! jal ji-nae-sseo-yo. yo-jeum eo-tteo-ke ji-nae-yo?', en:"Yes! I've been great. How have you been lately?", isMe:true},
+    {speaker:'지수', kr:'좀 바빴는데 괜찮아요. 오늘 시간 있어요?', rom:'jom ba-ppa-sseum-neun-de gwaen-cha-na-yo. o-neul si-gan i-sseo-yo?', en:"Been a bit busy but I'm okay. Do you have time today?", isMe:false},
+    {speaker:'나', kr:'네, 같이 커피 마실까요?', rom:'ne, ga-chi keo-pi ma-sil-kka-yo?', en:"Yes, shall we grab a coffee together?", isMe:true},
+  ]
+};
+
+function speak(t) {
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = 'ko-KR'; u.rate = 0.85; u.pitch = 1;
+  window.speechSynthesis.speak(u);
+}
+
+function playAll() {
+  const lines = dialogue.lines;
+  let i = 0;
+  function next() {
+    if(i >= lines.length) return;
+    const u = new SpeechSynthesisUtterance(lines[i].kr.replace(/~/g,''));
+    u.lang = 'ko-KR'; u.rate = 0.85;
+    u.onend = () => { i++; setTimeout(next, 400); };
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }
+  next();
+}
+
+function startMic(expected, btn, feedbackId) {
+  const resultEl = document.getElementById(feedbackId);
+  const orig = '🎤';
+
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let recordingReady = false;
+  let finalTranscript = '';
+  let recognition = null;
+  let isRecognizing = false;
+
+  // ── STEP 1: Start recording immediately ──
+  function doRecord(stream) {
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    mediaRecorder.ondataavailable = e => { if(e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(audioChunks, {type:'audio/webm'});
+      window._lastRecordingUrl = URL.createObjectURL(blob);
+      recordingReady = true;
+      // Show playback button immediately after recording stops
+      showPlaybackBtn(feedbackId, finalTranscript, expected, recordingReady);
+    };
+
+    btn.textContent = '🎙️'; btn.style.color = '#FF6B6B';
+    mediaRecorder.start();
+
+    // Show stop button
+    resultEl.innerHTML = `
+      <div style="color:#FF6B6B;font-size:.88rem;font-weight:700;padding:.6rem 1rem;background:#FFF0EA;border-radius:10px;margin-bottom:.5rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;">
+        <span>🎙️ 말하세요…</span>
+        <button onclick="window._stopMic&&window._stopMic()" style="background:#FF6B6B;color:white;border:none;border-radius:99px;padding:.25rem .8rem;font-size:.78rem;font-weight:700;cursor:pointer;">🛑 완료</button>
+      </div>`;
+
+    // ── STEP 2: Try speech recognition (optional, best-effort) ──
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = 'ko-KR';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onresult = e => {
+        finalTranscript = '';
+        for(let i = 0; i < e.results.length; i++) {
+          if(e.results[i].isFinal) finalTranscript += e.results[i][0].transcript;
+        }
+      };
+
+      // Auto-restart on end if still recording
+      recognition.onend = () => {
+        isRecognizing = false;
+        if(mediaRecorder && mediaRecorder.state === 'recording') {
+          // Restart after short pause
+          setTimeout(() => {
+            if(mediaRecorder && mediaRecorder.state === 'recording') {
+              try { recognition.start(); isRecognizing = true; } catch(e) {}
+            }
+          }, 300);
+        }
+      };
+
+      recognition.onerror = e => {
+        isRecognizing = false;
+        if(e.error === 'no-speech') return;
+      };
+
+      try { recognition.start(); isRecognizing = true; } catch(e) {}
+    }
+  }
+
+  // Stop everything
+  window._stopMic = () => {
+    if(recognition) { try { recognition.stop(); } catch(e) {} }
+    if(mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
+    btn.textContent = orig; btn.style.color = '#52b788';
+  };
+
+  if(window._micStream && window._micStream.active) {
+    doRecord(window._micStream);
+  } else {
+    navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+      window._micStream = stream;
+      doRecord(stream);
+    }).catch(() => {
+      btn.textContent = orig; btn.style.color = '#52b788';
+      resultEl.innerHTML = `<div style="color:#F59E0B;font-size:.82rem;padding:.5rem 1rem;background:#FEF3C7;border-radius:10px;margin-bottom:.5rem;">⚠️ 마이크 권한이 필요해요.</div>`;
+    });
+  }
+}
+
+function showPlaybackBtn(feedbackId, transcript, expected, ready) {
+  const resultEl = document.getElementById(feedbackId);
+  const pb = `<button onclick="playMyRecording(this)" style="background:var(--surface2);border:1.5px solid var(--border);color:var(--text-muted);border-radius:99px;padding:.25rem .7rem;font-size:.72rem;font-weight:600;cursor:pointer;" ${ready?'':'disabled'}>🔊 내 발음 듣기</button>`;
+
+  if(transcript) {
+    const clean = s => s.replace(/[?!.,~\s]/g,'').toLowerCase();
+    const match = clean(transcript) === clean(expected);
+    if(match) {
+      resultEl.innerHTML = `<div style="background:#F0FDF4;border:1.5px solid #86EFAC;border-radius:10px;padding:.6rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;"><span style="color:#276749;font-weight:700;">✅ 잘했어요!</span><span style="font-family:'Noto Sans KR',sans-serif;color:#0F172A;">"${transcript}"</span>${pb}</div>`;
+    } else {
+      resultEl.innerHTML = `<div style="background:#FFF8F6;border:1.5px solid rgba(255,107,107,.4);border-radius:10px;padding:.6rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.8rem;flex-wrap:wrap;"><span style="color:#E53E3E;font-weight:700;">🔄 다시!</span><span style="font-size:.8rem;color:var(--text-muted);">You: <span style="font-family:'Noto Sans KR',sans-serif;">"${transcript}"</span></span><span style="font-size:.8rem;">→ <span style="font-family:'Noto Sans KR',sans-serif;color:#52b788;font-weight:700;">"${expected}"</span></span>${pb}</div>`;
+    }
+  } else {
+    // No transcript — just show playback button
+    resultEl.innerHTML = `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.6rem 1rem;margin-bottom:.5rem;display:flex;align-items:center;gap:.8rem;">${pb}<span style="font-size:.75rem;color:var(--text-muted);">녹음됐어요! 들어보세요 👂</span></div>`;
+  }
+}
+
+function playMyRecording(btn) {
+  if(!window._lastRecordingUrl) return;
+  const audio = new Audio(window._lastRecordingUrl);
+  audio.play();
+}
+
+// Request mic permission early so it's ready when user taps 🎤
+navigator.mediaDevices.getUserMedia({audio:true}).then(stream => {
+  window._micStream = stream;
+}).catch(() => {});
+
+// Render dialogue
+const container = document.getElementById('dialogue-container');
+let html = `<div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:16px;padding:1.2rem;margin-bottom:1rem;">
+  <div class="header">
+    <div>
+      <div class="dia-label">대화 2</div>
+      <div class="dia-title">${dialogue.title}</div>
+      <div class="dia-title-en">${dialogue.titleEn}</div>
+    </div>
+    <button class="play-all" onclick="playAll()">▶ 전체 듣기</button>
+  </div>
+  <p class="hint">🔊 들으려면 스피커 · 🎤 말하려면 마이크</p>`;
+
+dialogue.lines.forEach((line, i) => {
+  const feedbackId = `fb-${i}`;
+  const kc = line.kr.replace(/~/g,'');
+  html += `<div class="dlg-line ${line.isMe?'me':'other'}">
+    <div class="speaker">${line.speaker}</div>
+    <div class="line-body">
+      <div class="kr">${line.kr}</div>
+      <div class="rom">${line.rom}</div>
+      <div class="en">${line.en}</div>
+    </div>
+    <div class="btns">
+      <button onclick="speak('${kc.replace(/'/g,"\\'")}')">🔊</button>
+      <button onclick="startMic('${kc.replace(/'/g,"\\'")}',this,'${feedbackId}')">🎤</button>
+    </div>
+  </div>
+  <div id="${feedbackId}" class="feedback"></div>`;
+});
+
+html += `</div>`;
+container.innerHTML = html;
+</script>
+</body>
+</html>
