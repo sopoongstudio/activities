@@ -228,6 +228,110 @@
   }
   .btn-shuffle:hover { border-color: var(--orange); color: var(--orange); }
 
+  /* ── DRILL MODE ── */
+  #drill-area {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 700px;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .drill-card {
+    width: 100%;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.1);
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px 20px;
+    position: relative;
+  }
+
+  .drill-emoji {
+    font-size: 6rem;
+    line-height: 1;
+  }
+
+  .drill-noun {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--orange);
+    letter-spacing: 2px;
+  }
+
+  .drill-prompt {
+    font-size: 0.9rem;
+    color: var(--gray);
+    text-align: center;
+  }
+
+  .drill-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .drill-btn {
+    width: 100%;
+    padding: 16px;
+    border: 2.5px solid var(--light-gray);
+    border-radius: var(--radius);
+    background: #fff;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    color: #333;
+    text-align: center;
+  }
+
+  .drill-btn:hover {
+    border-color: var(--orange);
+    background: #FFF6F0;
+  }
+
+  .drill-btn.selected {
+    border-color: var(--orange);
+    background: #FFF0E6;
+    color: var(--orange);
+  }
+
+  .drill-speak-prompt {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: #E8F5E9;
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    width: 100%;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2e7d32;
+    animation: pop .25s ease;
+  }
+
+  .drill-speak-prompt.show {
+    display: flex;
+  }
+
+  .drill-selected-sentence {
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: var(--orange);
+    text-align: center;
+    min-height: 2rem;
+    animation: pop .2s ease;
+  }
+
   /* ── DONE SCREEN ── */
   #done-screen {
     display: none;
@@ -380,6 +484,7 @@
     <button id="btn-review" class="btn-primary" style="background:#888; font-size:0.85rem; padding:10px 8px;" onclick="startReview()">📖 단어 복습</button>
     <button id="btn-matching" class="btn-primary" style="font-size:0.85rem; padding:10px 8px;" onclick="startMatching()">🎯 매칭게임</button>
     <button id="btn-newvocab" class="btn-primary" style="background: var(--light-orange); font-size:0.85rem; padding:10px 8px;" onclick="startNewVocab()">✨ 새단어</button>
+    <button id="btn-drill" class="btn-primary" style="display:none; font-size:0.85rem; padding:10px 8px;" onclick="startDrill()">🗣️ 말하기 드릴</button>
   </div>
 </div>
 
@@ -423,6 +528,27 @@
 
 <!-- ══ NEW VOCAB AREA ══ -->
 <div id="newvocab-area"></div>
+
+<!-- ══ DRILL AREA ══ -->
+<div id="drill-area">
+  <div class="progress-row">
+    <div class="progress-bar"><div class="progress-fill" id="drill-prog-fill"></div></div>
+    <div class="progress-text" id="drill-prog-text">1 / 10</div>
+  </div>
+  <div class="drill-card">
+    <div class="card-tag" id="drill-tag">말하기 드릴</div>
+    <div class="drill-emoji" id="drill-emoji">💧</div>
+    <div class="drill-noun" id="drill-noun">물</div>
+    <div class="drill-prompt">맞는 동사를 골라서 말해보세요!</div>
+    <div class="drill-selected-sentence" id="drill-sentence"></div>
+    <div class="drill-speak-prompt" id="drill-speak">
+      <span>🎤</span><span>따라 말해보세요!</span>
+    </div>
+  </div>
+  <div class="drill-choices" id="drill-choices"></div>
+  <button class="btn-primary" id="drill-next-btn" style="display:none" onclick="nextDrill()">다음 ✓</button>
+  <button class="btn-primary" style="margin-top:4px; background:#888;" onclick="endDrill()">← 돌아가기</button>
+</div>
 
 <!-- ══ MATCHING TAB ══ -->
 <div id="matching-area">
@@ -679,6 +805,7 @@ function switchTab(tab) {
 function hideCardAreas() {
   document.getElementById('card-area').style.display = 'none';
   document.getElementById('done-screen').style.display = 'none';
+  document.getElementById('drill-area').style.display = 'none';
 }
 
 // ── SECTION SELECT ──
@@ -689,7 +816,8 @@ function selectSection(el, sec) {
   const isSentence = sec === 'sentence';
   document.getElementById('btn-review').style.display = isSentence ? 'none' : 'block';
   document.getElementById('btn-newvocab').style.display = isSentence ? 'none' : 'block';
-  document.getElementById('btn-matching').style.flex = isSentence ? '1' : '';
+  document.getElementById('btn-matching').style.display = isSentence ? 'none' : 'block';
+  document.getElementById('btn-drill').style.display = isSentence ? 'block' : 'none';
 }
 
 // ── REVIEW START ──
@@ -922,6 +1050,163 @@ function showMatchDone() {
   document.getElementById('match-done').style.display = 'flex';
   document.getElementById('match-back-btn').style.display = 'none';
   document.getElementById('match-done-text').textContent = `${matchPairs.length}개 모두 맞췄어요! 🌟`;
+}
+
+// ── DRILL DATA ──
+const DRILL_CARDS = [
+  { emoji:'💧', noun:'물', choices:[
+    { verb:'마셔요', particle:'을' },
+    { verb:'끓여요', particle:'이' },
+    { verb:'좋아요', particle:'이' },
+  ]},
+  { emoji:'🐶', noun:'강아지', choices:[
+    { verb:'앉아요', particle:'가' },
+    { verb:'좋아요', particle:'가' },
+    { verb:'없어요', particle:'가' },
+  ]},
+  { emoji:'📚', noun:'책', choices:[
+    { verb:'읽어요', particle:'을' },
+    { verb:'많아요', particle:'이' },
+    { verb:'좋아요', particle:'이' },
+  ]},
+  { emoji:'👶', noun:'아이', choices:[
+    { verb:'웃어요', particle:'가' },
+    { verb:'울어요', particle:'가' },
+    { verb:'자요', particle:'가' },
+  ]},
+  { emoji:'👫', noun:'친구', choices:[
+    { verb:'많아요', particle:'가' },
+    { verb:'없어요', particle:'가' },
+    { verb:'좋아요', particle:'가' },
+  ]},
+  { emoji:'🥛', noun:'우유', choices:[
+    { verb:'마셔요', particle:'를' },
+    { verb:'좋아요', particle:'가' },
+    { verb:'없어요', particle:'가' },
+  ]},
+  { emoji:'🍎', noun:'사과', choices:[
+    { verb:'먹어요', particle:'를' },
+    { verb:'많아요', particle:'가' },
+    { verb:'좋아요', particle:'가' },
+  ]},
+  { emoji:'🐱', noun:'고양이', choices:[
+    { verb:'앉아요', particle:'가' },
+    { verb:'많아요', particle:'가' },
+    { verb:'좋아요', particle:'가' },
+  ]},
+  { emoji:'🌱', noun:'흙', choices:[
+    { verb:'많아요', particle:'이' },
+    { verb:'좋아요', particle:'이' },
+    { verb:'없어요', particle:'이' },
+  ]},
+  { emoji:'🪑', noun:'의자', choices:[
+    { verb:'없어요', particle:'가' },
+    { verb:'많아요', particle:'가' },
+    { verb:'좋아요', particle:'가' },
+  ]},
+  { emoji:'🍳', noun:'요리', choices:[
+    { verb:'해요', particle:'를' },
+    { verb:'좋아요', particle:'가' },
+    { verb:'맛있어요', particle:'가' },
+  ]},
+  { emoji:'🎵', noun:'음악', choices:[
+    { verb:'들어요', particle:'을' },
+    { verb:'좋아요', particle:'이' },
+    { verb:'없어요', particle:'이' },
+  ]},
+  { emoji:'✏️', noun:'연필', choices:[
+    { verb:'써요', particle:'을' },
+    { verb:'없어요', particle:'이' },
+    { verb:'좋아요', particle:'이' },
+  ]},
+  { emoji:'🌸', noun:'꽃', choices:[
+    { verb:'많아요', particle:'이' },
+    { verb:'좋아요', particle:'이' },
+    { verb:'없어요', particle:'이' },
+  ]},
+  { emoji:'👜', noun:'가방', choices:[
+    { verb:'있어요', particle:'이' },
+    { verb:'없어요', particle:'이' },
+    { verb:'좋아요', particle:'이' },
+  ]},
+];
+
+let drillDeck = [];
+let drillIndex = 0;
+let drillSelected = null;
+
+function startDrill() {
+  drillDeck = shuffle([...DRILL_CARDS]);
+  drillIndex = 0;
+  drillSelected = null;
+  document.getElementById('selector').style.display = 'none';
+  document.getElementById('drill-area').style.display = 'flex';
+  showDrillCard();
+}
+
+function showDrillCard() {
+  if (drillIndex >= drillDeck.length) { showDrillDone(); return; }
+  const card = drillDeck[drillIndex];
+  drillSelected = null;
+
+  document.getElementById('drill-emoji').textContent = card.emoji;
+  document.getElementById('drill-noun').textContent = card.noun;
+  document.getElementById('drill-sentence').textContent = '';
+  document.getElementById('drill-speak').classList.remove('show');
+  document.getElementById('drill-next-btn').style.display = 'none';
+
+  // progress
+  const pct = (drillIndex / drillDeck.length) * 100;
+  document.getElementById('drill-prog-fill').style.width = pct + '%';
+  document.getElementById('drill-prog-text').textContent = `${drillIndex+1} / ${drillDeck.length}`;
+
+  // render choices
+  const container = document.getElementById('drill-choices');
+  container.innerHTML = '';
+  card.choices.forEach(choice => {
+    const btn = document.createElement('button');
+    btn.className = 'drill-btn';
+    btn.textContent = choice.verb;
+    btn.onclick = () => selectDrillVerb(btn, card, choice);
+    container.appendChild(btn);
+  });
+}
+
+function selectDrillVerb(btn, card, choice) {
+  // deselect all
+  document.querySelectorAll('.drill-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  drillSelected = choice.verb;
+
+  const sentence = `${card.noun}${choice.particle} ${choice.verb}`;
+  document.getElementById('drill-sentence').textContent = sentence;
+  document.getElementById('drill-speak').classList.add('show');
+  document.getElementById('drill-next-btn').style.display = 'block';
+
+  // TTS
+  if (window.speechSynthesis) {
+    const utt = new SpeechSynthesisUtterance(sentence);
+    utt.lang = 'ko-KR';
+    utt.rate = 0.85;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utt);
+  }
+}
+
+function nextDrill() {
+  drillIndex++;
+  showDrillCard();
+}
+
+function showDrillDone() {
+  document.getElementById('drill-area').style.display = 'none';
+  document.getElementById('done-screen').style.display = 'flex';
+  document.getElementById('done-text').textContent = `말하기 드릴 완료! 수고했어요 🌟`;
+}
+
+function endDrill() {
+  document.getElementById('drill-area').style.display = 'none';
+  document.getElementById('selector').style.display = 'block';
 }
 
 // Init
