@@ -406,6 +406,7 @@
     user-select: none;
   }
   .match-item.emoji-item { font-size: 2.2rem; }
+  .match-item.emoji-item .emoji-caption { font-size: 0.62rem; font-weight: 600; color: #888; margin-top: 2px; }
   .match-item:hover { border-color: var(--orange); background: #FFF6F0; }
   .match-item.selected { border-color: var(--orange); background: #FFF0E6; box-shadow: 0 0 0 3px rgba(200,96,42,.2); }
   .match-item.correct { border-color: #2e7d32; background: #E8F5E9; color: #2e7d32; pointer-events: none; }
@@ -963,7 +964,8 @@ function renderMatchGame() {
     el.className = 'match-item emoji-item';
     el.style.flexDirection = 'column';
     el.style.gap = '2px';
-    el.innerHTML = `<span>${pair.emoji}</span>${pair.label ? `<span style="font-size:0.6rem;font-weight:600;color:#888;">${pair.label}</span>` : ''}`;
+    const engLabel = pair.label || (pair.e ? pair.e.split('/')[0].trim() : '');
+    el.innerHTML = `<span>${pair.emoji}</span>${engLabel ? `<span class="emoji-caption">(${engLabel})</span>` : ''}`;
     el.dataset.idx = i;
     el.dataset.type = 'emoji';
     el.onclick = () => handleMatchClick(el, 'emoji', i);
