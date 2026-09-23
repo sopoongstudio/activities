@@ -114,11 +114,11 @@ function render(){
     });
   }
 }
-function goScene(i){ if(i<0||i>=scenes.length) return; si=i; strokes=[]; redraw(); render(); }
+function goScene(i){ if(i<0||i>=scenes.length) return; si=i; strokes=strokesByScene[si]||(strokesByScene[si]=[]); redraw(); render(); }
 
-/* pen with undo */
+/* pen with undo (kept per-scene so switching tabs doesn't erase markup) */
 const cv=$('ink'), ctx=cv.getContext('2d');
-let strokes=[], cur=null, penVar='--yellow';
+let strokesByScene={0:[]}, strokes=strokesByScene[0], cur=null, penVar='--yellow';
 const col=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 function size(){ const r=cv.getBoundingClientRect(), d=devicePixelRatio||1; cv.width=r.width*d; cv.height=r.height*d; ctx.setTransform(d,0,0,d,0,0); redraw(); }
 function drawStroke(s){ if(s.p.length<1) return; ctx.strokeStyle=col(s.c); ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath(); ctx.moveTo(s.p[0][0],s.p[0][1]); s.p.forEach(([x,y])=>ctx.lineTo(x,y)); ctx.stroke(); }
@@ -132,8 +132,8 @@ function setColor(v){ penVar=v; document.querySelectorAll('.swatch').forEach(s=>
 document.querySelectorAll('.swatch').forEach(s=>{s.style.background=`var(${s.dataset.c})`;s.onclick=()=>setColor(s.dataset.c);});
 $('penBtn').onclick=togglePen;
 $('undoBtn').onclick=()=>{strokes.pop();redraw();};
-$('clearBtn').onclick=()=>{strokes=[];redraw();};
-$('resetBtn').onclick=()=>{strokes=[];redraw();render();};
+$('clearBtn').onclick=()=>{strokes.length=0;redraw();};
+$('resetBtn').onclick=()=>{strokes.length=0;redraw();render();};
 $('themeBtn').onclick=()=>{const r=document.documentElement;const dark=col('--board')==='#22302b';r.dataset.theme=dark?'light':'dark';redraw();};
 addEventListener('resize',size);
 addEventListener('keydown',e=>{
@@ -141,9 +141,9 @@ addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();goScene(si+1);}
   else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();goScene(si-1);}
   else if(e.key==='p'||e.key==='P') togglePen();
-  else if(e.key==='c'||e.key==='C'){strokes=[];redraw();}
+  else if(e.key==='c'||e.key==='C'){strokes.length=0;redraw();}
   else if(e.key==='z'||e.key==='Z'){strokes.pop();redraw();}
-  else if(e.key==='r'||e.key==='R'){strokes=[];redraw();render();}
+  else if(e.key==='r'||e.key==='R'){strokes.length=0;redraw();render();}
 });
 setColor('--ink'); render(); size();
 </script>
