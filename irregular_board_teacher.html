@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>불규칙 동사 · 수업 칠판</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef2f0; --board:#f8faf9; --ink:#1f2a26; --muted:#7d8a84; --line:#c9d3ce;
+  --pink:#d23d63; --mint:#178a5e; --yellow:#b07f00; --tab:#e1e8e4; --blue:#1f6fd1;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#18221e; --board:#22302b; --ink:#eef3ee; --muted:#8fa39a; --line:#3a4d45;
+  --pink:#ff8fa3; --mint:#86e0b5; --yellow:#f6d56b; --tab:#2c3c36; --blue:#6fb3ff; } }
+:root[data-theme="dark"]{
+  --bg:#18221e; --board:#22302b; --ink:#eef3ee; --muted:#8fa39a; --line:#3a4d45;
+  --pink:#ff8fa3; --mint:#86e0b5; --yellow:#f6d56b; --tab:#2c3c36; --blue:#6fb3ff; }
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Gowun Dodum","Malgun Gothic",sans-serif}
+.wrap{max-width:1240px;height:100%;margin:0 auto;padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.tabs,.tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+button{font-family:Jua,"Malgun Gothic",sans-serif;font-size:18px;border:0;border-radius:10px;background:var(--tab);color:var(--ink);padding:8px 14px;cursor:pointer}
+.tabs button[aria-current="true"]{background:var(--ink);color:var(--board)}
+.tools button[aria-pressed="true"]{background:var(--yellow);color:var(--board)}
+.swatch{width:30px;height:30px;padding:0;border-radius:50%;border:3px solid transparent}
+.swatch[aria-pressed="true"]{border-color:var(--ink)}
+button:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+.board{position:relative;flex:1;min-height:520px;background:var(--board);border-radius:22px;padding:clamp(20px,3vw,40px);overflow:hidden}
+.lines{position:relative;z-index:6;display:flex;flex-direction:column;gap:clamp(8px,1.4vw,18px);font-family:Jua,"Malgun Gothic",sans-serif;font-size:clamp(28px,3.8vw,48px);line-height:1.5;pointer-events:none}
+.lines .en{font-family:"Gowun Dodum","Malgun Gothic",sans-serif;font-size:clamp(24px,2.7vw,34px);color:var(--yellow);margin-top:-4px}
+.blank{pointer-events:auto;display:inline-flex;flex-direction:column;align-items:center;vertical-align:top;margin:0 .15em;cursor:pointer;border:0;background:none;padding:0;font:inherit;color:inherit}
+.blank .ans{min-width:3.6em;padding:0 .3em;border-bottom:4px dashed var(--muted);color:transparent;text-align:center;border-radius:10px 10px 0 0;transition:background .2s}
+.blank:hover .ans{background:color-mix(in srgb,var(--ink) 6%,transparent)}
+.blank .hint{font-family:"Gowun Dodum","Malgun Gothic",sans-serif;font-size:max(14px,.36em);color:var(--muted);line-height:1.2;margin-top:4px}
+.blank.open .ans{color:var(--ink);border-bottom-color:transparent;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:12px}
+.blank.open .ans em{font-style:normal;color:var(--pink)}
+.blank.open .ans i{font-style:normal;color:var(--mint)}
+.rule{position:relative;z-index:6;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{display:flex;flex-direction:column;justify-content:flex-start;align-items:flex-start;text-align:left;border-radius:18px;padding:22px;background:color-mix(in srgb,var(--ink) 6%,transparent);font-family:"Gowun Dodum","Malgun Gothic",sans-serif}
+.card h3{margin:0 0 4px;font-family:Jua,"Malgun Gothic",sans-serif;font-size:clamp(22px,2.6vw,32px);font-weight:400}
+.card p{margin:0 0 12px;color:var(--muted);font-size:clamp(18px,1.9vw,22px)}
+.card .body{transition:filter .3s,opacity .3s}
+.card:not(.open) .body{filter:blur(10px);opacity:.5}
+.chip{display:inline-block;font-family:Jua,"Malgun Gothic",sans-serif;font-size:clamp(18px,2vw,24px);padding:4px 14px;border-radius:999px;margin:4px 6px 4px 0}
+.vw h3,.vw .chip{color:var(--pink)} .vw .chip{background:color-mix(in srgb,var(--pink) 16%,transparent)}
+.cn h3,.cn .chip{color:var(--mint)} .cn .chip{background:color-mix(in srgb,var(--mint) 16%,transparent)}
+canvas{position:absolute;inset:0;width:100%;height:100%;z-index:5;pointer-events:none}
+.pen canvas{pointer-events:auto;cursor:crosshair}
+.top{position:relative;z-index:6;display:flex;flex-direction:row-reverse;flex-wrap:wrap;gap:16px 24px;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.verbs{display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+.verb{font-family:Jua,"Malgun Gothic",sans-serif;font-size:clamp(34px,4.4vw,58px);color:var(--blue);border:4px solid var(--blue);border-radius:14px;padding:.05em .45em;line-height:1.3}
+@media (max-width:700px){.rule{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <nav class="tabs" id="tabs" aria-label="Scenes"></nav>
+    <div class="tools">
+      <button id="penBtn" aria-pressed="true" title="P">✏️ 펜</button>
+      <button class="swatch" data-c="--ink" aria-label="White pen"></button>
+      <button class="swatch" data-c="--yellow" aria-label="Yellow pen"></button>
+      <button class="swatch" data-c="--pink" aria-label="Pink pen"></button>
+      <button class="swatch" data-c="--mint" aria-label="Green pen"></button>
+      <button id="undoBtn" title="Z">↶ 되돌리기</button>
+      <button id="clearBtn" title="C">🧽 지우기</button>
+      <button id="resetBtn" title="R">↺ 처음부터</button>
+      <button id="themeBtn" aria-label="Switch theme">◐</button>
+    </div>
+  </header>
+  <main class="board pen" id="board">
+    <div id="content"></div>
+    <canvas id="ink"></canvas>
+  </main>
+</div>
+<script>
+/* [answer|hint] : answer uses <em> for changed part, <i> for unchanged ending */
+const scenes=[
+ {tab:'규칙',rule:true},
+ {tab:'ㅂ',verb:['돕다'],lines:['소미 씨는 친구를 [돕<i>고</i>|+ 고],','저는 동생을 [도<em>와</em>요|+ 아요/어요].'],en:'Somi helps her friend, and I help my sibling.'},
+ {tab:'ㄷ',verb:['듣다'],lines:['소미 씨는 K-pop을 [듣<i>고</i>|+ 고],','저는 OST를 [<em>들</em>어요|+ 아요/어요].'],en:'Somi listens to K-pop, and I listen to OSTs.'},
+ {tab:'ㅅ',verb:['짓다'],lines:['소미 씨는 고양이 이름을 [짓<i>고</i>|+ 고],','저는 강아지 이름을 [<em>지</em>어요|+ 아요/어요].'],en:'Somi names her cat, and I name my dog.'},
+ {tab:'르 ①',verb:['모르다'],lines:['저는 이 문제를 잘 [몰<em>라</em>요|+ 아요/어요].'],en:"I don't really know this question."},
+ {tab:'르 ②',verb:['기르다'],lines:['소미 씨는 고양이를 [기르<i>고</i>|+ 고],','저는 강아지를 [길<em>러</em>요|+ 아요/어요].'],en:'Somi raises a cat, and I raise a dog.'},
+ {tab:'으 비교',verb:['돕다','모르다'],lines:['내일 친구를 [도<em>울</em> 거예요|+ (으)ㄹ 거예요].','저는 아마 답을 [모<i>를</i> 거예요|+ (으)ㄹ 거예요].'],en:"I'll help my friend tomorrow. / I probably won't know the answer."}
+];
+const $=id=>document.getElementById(id);
+let si=0;
+function render(){
+  $('tabs').innerHTML='';
+  scenes.forEach((s,i)=>{const b=document.createElement('button');b.textContent=s.tab;b.setAttribute('aria-current',i===si);b.onclick=()=>goScene(i);$('tabs').appendChild(b);});
+  const s=scenes[si];
+  if(s.rule){
+    $('content').innerHTML=`<div class="rule">
+      <button class="card vw"><h3>모음으로 시작 → 바뀌어요</h3><p>Ending starts with a vowel → it changes</p>
+        <div class="body"><span class="chip">-아요/어요</span><span class="chip">-았어요/었어요</span><span class="chip">-아서/어서</span><span class="chip">-(으)ㄹ 거예요</span></div></button>
+      <button class="card cn"><h3>자음으로 시작 → 그대로</h3><p>Ending starts with a consonant → no change</p>
+        <div class="body"><span class="chip">-고</span><span class="chip">-습니다</span><span class="chip">-지만</span></div></button></div>`;
+    document.querySelectorAll('.card').forEach(c=>c.onclick=()=>c.classList.toggle('open'));
+  } else {
+    const html=s.lines.map(l=>'<div>'+l.replace(/\[([^|\]]+)\|([^\]]+)\]/g,(m,a,h)=>`<button class="blank" aria-label="Show answer"><span class="ans">${a}</span></button>`)+'</div>').join('');
+    $('content').innerHTML=`<div class="top"><div class="verbs">${s.verb.map(v=>`<span class="verb">${v}</span>`).join('')}</div><div class="lines">${html}<div class="en">${s.en}</div></div></div>`;
+    document.querySelectorAll('.blank').forEach(b=>b.onclick=()=>{
+      const open=b.classList.toggle('open');
+      if(open&&!matchMedia('(prefers-reduced-motion: reduce)').matches)
+        b.querySelector('.ans').animate([{transform:'scale(.7)',opacity:.2},{transform:'scale(1)',opacity:1}],{duration:380,easing:'cubic-bezier(.3,1.5,.5,1)'});
+    });
+  }
+}
+function goScene(i){ if(i<0||i>=scenes.length) return; si=i; strokes=[]; redraw(); render(); }
+
+/* pen with undo */
+const cv=$('ink'), ctx=cv.getContext('2d');
+let strokes=[], cur=null, penVar='--yellow';
+const col=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function size(){ const r=cv.getBoundingClientRect(), d=devicePixelRatio||1; cv.width=r.width*d; cv.height=r.height*d; ctx.setTransform(d,0,0,d,0,0); redraw(); }
+function drawStroke(s){ if(s.p.length<1) return; ctx.strokeStyle=col(s.c); ctx.lineWidth=5; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.beginPath(); ctx.moveTo(s.p[0][0],s.p[0][1]); s.p.forEach(([x,y])=>ctx.lineTo(x,y)); ctx.stroke(); }
+function redraw(){ ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height); ctx.restore(); strokes.forEach(drawStroke); }
+const pos=e=>{const r=cv.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top];};
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);cur={c:penVar,p:[pos(e)]};strokes.push(cur);});
+cv.addEventListener('pointermove',e=>{if(!cur)return;cur.p.push(pos(e));const n=cur.p.length;ctx.strokeStyle=col(cur.c);ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(...cur.p[n-2]);ctx.lineTo(...cur.p[n-1]);ctx.stroke();});
+const end=()=>cur=null; cv.addEventListener('pointerup',end); cv.addEventListener('pointercancel',end);
+function togglePen(){ const on=!$('board').classList.contains('pen'); $('board').classList.toggle('pen',on); $('penBtn').setAttribute('aria-pressed',on); }
+function setColor(v){ penVar=v; document.querySelectorAll('.swatch').forEach(s=>s.setAttribute('aria-pressed',s.dataset.c===v)); if(!$('board').classList.contains('pen')) togglePen(); }
+document.querySelectorAll('.swatch').forEach(s=>{s.style.background=`var(${s.dataset.c})`;s.onclick=()=>setColor(s.dataset.c);});
+$('penBtn').onclick=togglePen;
+$('undoBtn').onclick=()=>{strokes.pop();redraw();};
+$('clearBtn').onclick=()=>{strokes=[];redraw();};
+$('resetBtn').onclick=()=>{strokes=[];redraw();render();};
+$('themeBtn').onclick=()=>{const r=document.documentElement;const dark=col('--board')==='#22302b';r.dataset.theme=dark?'light':'dark';redraw();};
+addEventListener('resize',size);
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter')) return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'){e.preventDefault();goScene(si+1);}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();goScene(si-1);}
+  else if(e.key==='p'||e.key==='P') togglePen();
+  else if(e.key==='c'||e.key==='C'){strokes=[];redraw();}
+  else if(e.key==='z'||e.key==='Z'){strokes.pop();redraw();}
+  else if(e.key==='r'||e.key==='R'){strokes=[];redraw();render();}
+});
+setColor('--ink'); render(); size();
+</script>
+</body>
+</html>

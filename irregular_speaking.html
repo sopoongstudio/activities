@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>불규칙 동사 말하기 · Speaking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF2FB; --dot:#D5DDF0; --ink:#1E2761; --muted:#626B87; --paper:#FFFFFF; --line:#DCE2F0;
+  --coral:#E64A5C; --sky:#3B7BDB; --mint:#1FA38A; --sun:#F2A516; --plum:#8B5CF6;
+  --shadow:0 2px 0 #CDD5EA, 0 10px 24px -14px rgba(30,39,97,.35);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#131832; --dot:#232B4F; --ink:#EDF0FB; --muted:#A5ADC8; --paper:#1F264A; --line:#303A66;
+    --shadow:0 2px 0 #0C1026, 0 10px 24px -14px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#131832; --dot:#232B4F; --ink:#EDF0FB; --muted:#A5ADC8; --paper:#1F264A; --line:#303A66;
+  --shadow:0 2px 0 #0C1026, 0 10px 24px -14px rgba(0,0,0,.6);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;color:var(--ink);
+  background:var(--bg) radial-gradient(var(--dot) 1.4px,transparent 1.4px) 0 0/22px 22px;
+  font-family:"Noto Sans KR","Malgun Gothic","Apple SD Gothic Neo",system-ui,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:32px 22px 44px}
+.jua{font-family:"Jua","Noto Sans KR",sans-serif;font-weight:400}
+
+/* header */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px}
+.title-block h1{margin:0;font-family:"Jua",sans-serif;font-weight:400;font-size:clamp(34px,6vw,54px);line-height:1;letter-spacing:-1px}
+.title-block h1 .under{background:linear-gradient(transparent 62%,#FFD76A 62%);padding:0 4px}
+.title-block .sub{margin:10px 0 0;font-size:15px;color:var(--muted)}
+.bubble{position:relative;background:var(--paper);border:2px solid var(--ink);border-radius:18px;padding:12px 18px;
+  font-family:"Jua",sans-serif;font-size:22px;box-shadow:4px 4px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;left:28px;bottom:-11px;width:18px;height:18px;background:var(--paper);
+  border-right:2px solid var(--ink);border-bottom:2px solid var(--ink);transform:rotate(45deg)}
+.bubble small{display:block;font-family:"Noto Sans KR",sans-serif;font-size:12px;color:var(--muted)}
+
+/* example */
+.example{display:grid;grid-template-columns:minmax(230px,290px) 1fr;gap:28px;align-items:center;
+  background:var(--paper);border-radius:22px;padding:22px;margin:30px 0 22px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.rule .tag{display:inline-block;font-size:13px;font-weight:700;color:var(--sky);margin-bottom:8px}
+.build{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 16px;font-family:"Jua",sans-serif;font-size:28px}
+.piece{background:var(--bg);border-radius:12px;padding:4px 14px}
+.piece.p{background:var(--coral);color:#fff}
+.plus{color:var(--muted);font-size:22px}
+.rows{display:grid;gap:8px}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:15px;color:var(--muted)}
+.row .key{font-weight:700;color:var(--ink);background:var(--bg);border-radius:8px;padding:3px 10px}
+.row b{color:var(--coral)}
+
+/* tools */
+.bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+button.tool{font:inherit;font-size:14px;font-weight:700;border-radius:12px;padding:10px 18px;cursor:pointer;
+  border:2px solid var(--ink);background:var(--paper);color:var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+button.tool:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+button.tool.primary{background:var(--ink);color:var(--paper)}
+.count{font-size:14px;color:var(--muted)}
+.count b{font-family:"Jua",sans-serif;font-weight:400;font-size:22px;color:var(--ink)}
+button.tool:focus-visible,.card:focus-visible{outline:3px solid var(--sky);outline-offset:4px}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:20px}
+.card{--c:var(--coral);height:268px;perspective:1100px;cursor:pointer;border-radius:20px}
+.example .card{height:252px}
+.inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:20px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px 14px 16px;text-align:center;
+  background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}
+.face::before{content:"";position:absolute;inset:0 0 auto;height:8px;background:var(--c)}
+.back{transform:rotateY(180deg);background:color-mix(in srgb,var(--c) 9%,var(--paper));border:2px solid var(--c)}
+.num{position:absolute;top:16px;left:14px;min-width:28px;height:28px;padding:0 8px;border-radius:999px;display:grid;place-items:center;
+  font-size:13px;font-weight:700;color:#fff;background:var(--c)}
+.flip-hint{position:absolute;top:18px;right:14px;font-size:12px;color:var(--muted)}
+.sticker{width:78px;height:78px;border-radius:50%;display:grid;place-items:center;font-size:42px;
+  background:color-mix(in srgb,var(--c) 16%,var(--paper));border:3px dashed color-mix(in srgb,var(--c) 55%,transparent)}
+.chips{display:flex;align-items:center;gap:6px;font-family:"Jua",sans-serif;font-size:20px}
+.chip{border-radius:10px;padding:2px 10px;background:var(--bg)}
+.chip.v{background:color-mix(in srgb,var(--c) 18%,var(--paper));color:var(--ink)}
+.en{font-size:13px;color:var(--muted);font-style:italic;margin-top:-2px}
+.sent{margin-top:4px;font-family:"Jua",sans-serif;font-size:21px;border-top:2px dashed var(--line);padding-top:10px;width:100%}
+.blank{display:inline-block;min-width:76px;border-bottom:3px solid var(--c);transform:translateY(-4px)}
+
+.type{font-size:13px;font-weight:700;color:#fff;background:var(--c);border-radius:999px;padding:4px 12px}
+.type.reg{background:transparent;color:var(--muted);border:1.5px solid var(--line)}
+.change{font-family:"Jua",sans-serif;font-size:24px;display:flex;align-items:center;gap:10px}
+.change .arrow{color:var(--muted);font-size:18px}
+.change .to{color:var(--c)}
+.back .sent{font-size:25px;border-top-color:color-mix(in srgb,var(--c) 30%,transparent)}
+.verb{color:var(--c)}
+.part{color:var(--sky)}
+
+.card:nth-child(5n+1){--c:var(--coral)}
+.card:nth-child(5n+2){--c:var(--sky)}
+.card:nth-child(5n+3){--c:var(--mint)}
+.card:nth-child(5n+4){--c:var(--sun)}
+.card:nth-child(5n+5){--c:var(--plum)}
+.example .card{--c:var(--ink)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .example .card{--c:#8EA2FF}}
+:root[data-theme="dark"] .example .card{--c:#8EA2FF}
+
+footer{margin-top:32px;display:flex;justify-content:center}
+footer span{font-family:"Jua",sans-serif;font-size:16px;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:8px 18px;color:var(--muted)}
+
+@media (max-width:640px){
+  .example{grid-template-columns:1fr}
+  .bubble{font-size:19px}
+}
+@media (prefers-reduced-motion:reduce){.inner,button.tool{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title-block">
+      <h1><span class="under">불규칙 동사</span> 말하기</h1>
+      <p class="sub">그림을 보고 돌아가면서 대답해요 · Look at the picture and take turns answering</p>
+    </div>
+    <div class="bubble">뭐 해요?<small>What are you doing?</small></div>
+  </header>
+
+  <section class="example" aria-label="예시">
+    <div class="card" tabindex="0" role="button" aria-label="예시 카드 뒤집기" data-flip>
+      <div class="inner">
+        <div class="face front">
+          <span class="num">예시</span><span class="flip-hint">탭해서 뒤집기</span>
+          <div class="sticker">🪟</div>
+          <div class="chips"><span class="chip">창문</span>+<span class="chip v">닫다</span></div>
+          <div class="en">close the window</div>
+          <div class="sent">저는 창문을 <span class="blank"></span></div>
+        </div>
+        <div class="face back">
+          <span class="num">예시</span>
+          <span class="type reg">규칙</span>
+          <div class="change"><span>닫다</span><span class="arrow">▶</span><span class="to">닫아요</span></div>
+          <div class="sent">저는 창문<span class="part">을</span> <span class="verb">닫아요</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="rule">
+      <span class="tag">이렇게 말해요 · How to say it</span>
+      <div class="build">
+        <span class="piece">창문</span><span class="plus">+</span>
+        <span class="piece p">을</span><span class="plus">+</span>
+        <span class="piece">닫아요</span>
+      </div>
+      <div class="rows">
+        <div class="row"><span class="key">받침 O → 을</span> 창문<b>을</b>, 음악<b>을</b>, 선물<b>을</b></div>
+        <div class="row"><span class="key">받침 X → 를</span> 노래<b>를</b>, 친구<b>를</b></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="tools">
+      <button class="tool primary" id="all">모두 뒤집기 (Show all)</button>
+      <button class="tool" id="reset">처음으로 (Reset)</button>
+    </div>
+    <div class="count" aria-live="polite"><b id="done">0</b> / <span id="total">0</span> 완료</div>
+  </div>
+
+  <section class="grid" id="grid" aria-label="말하기 카드"></section>
+
+  <footer><span>funKorean | with Melanie</span></footer>
+</div>
+
+<script>
+// [emoji, noun, verb, english, particle, answer, type]
+const items = [
+  ["🎧","음악","듣다","listen to music","을","들어요","ㄷ 불규칙"],
+  ["🎁","선물","받다","receive a gift","을","받아요","규칙"],
+  ["🏗️","집","짓다","build a house","을","지어요","ㅅ 불규칙"],
+  ["🧥","옷","입다","put on clothes","을","입어요","규칙"],
+  ["🤝","친구","돕다","help a friend","를","도와요","ㅂ 불규칙"],
+  ["🤔","답","모르다","not know the answer","을","몰라요","르 불규칙"],
+  ["🎤","노래","부르다","sing a song","를","불러요","르 불규칙"]
+];
+const grid = document.getElementById("grid");
+items.forEach(([e,n,v,en,p,ans,type],i) => {
+  const c = document.createElement("div");
+  c.className = "card"; c.tabIndex = 0; c.setAttribute("role","button");
+  c.setAttribute("aria-label", (i+1) + "번 카드 뒤집기"); c.dataset.flip = ""; c.dataset.count = "";
+  c.innerHTML = `<div class="inner">
+    <div class="face front"><span class="num">${i+1}</span>
+      <div class="sticker">${e}</div>
+      <div class="chips"><span class="chip">${n}</span>+<span class="chip v">${v}</span></div>
+      <div class="en">${en}</div>
+      <div class="sent">저는 ${n}${p} <span class="blank"></span></div></div>
+    <div class="face back"><span class="num">${i+1}</span>
+      <span class="type${type === "규칙" ? " reg" : ""}">${type}</span>
+      <div class="change"><span>${v}</span><span class="arrow">▶</span><span class="to">${ans}</span></div>
+      <div class="sent">저는 ${n}<span class="part">${p}</span> <span class="verb">${ans}</span></div></div>
+  </div>`;
+  grid.appendChild(c);
+});
+const cards = () => document.querySelectorAll("[data-flip]");
+const counted = () => document.querySelectorAll("[data-count]");
+document.getElementById("total").textContent = counted().length;
+const update = () => {
+  document.getElementById("done").textContent = [...counted()].filter(c => c.classList.contains("flipped")).length;
+};
+cards().forEach(c => {
+  const t = () => { c.classList.toggle("flipped"); update(); };
+  c.addEventListener("click", t);
+  c.addEventListener("keydown", ev => { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); t(); } });
+});
+document.getElementById("all").onclick = () => { cards().forEach(c => c.classList.add("flipped")); update(); };
+document.getElementById("reset").onclick = () => { cards().forEach(c => c.classList.remove("flipped")); update(); };
+</script>
+</body>
+</html>
